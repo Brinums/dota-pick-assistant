@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  username        String?          @unique
+  passwordHash    String
+  role            UserRole         @default(USER)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  matches         Match[]
+  recommendations Recommendation[]
+
+  @@map("users")
+}
+
+model Hero {
+  id                         Int              @id
+  name                       String
+  localizedName              String           @unique
+  primaryAttr                String
+  attackType                 String
+  roles                      Json
+  proPick                    Int              @default(0)
+  proWin                     Int              @default(0)
+  rawWinRate                 Float            @default(0)
+  createdAt                  DateTime         @default(now())
+  updatedAt                  DateTime         @updatedAt
+  recommendationsAsSuggested Recommendation[]
+  matchupsAsHero             HeroMatchup[]    @relation("HeroMatchupHero")
+  matchupsAsOpponent         HeroMatchup[]    @relation("HeroMatchupOpponent")
+  synergiesAsHero            HeroSynergy[]    @relation("HeroSynergyHero")
+  synergiesAsPair            HeroSynergy[]    @relation("HeroSynergyPair")
+
+  @@map("heroes")
+}
+
+model Match {
+  id           BigInt   @id
+  userId       Int?
+  radiantPicks Json
+  direPicks    Json
+  winner       String
+  source       String   @default("external_api")
+  playedAt     DateTime
+  createdAt    DateTime @default(now())
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([playedAt])
+  @@map("matches")
+}
+
+model Recommendation {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  suggestedHeroId Int
+  allyHeroIds     Json
+  enemyHeroIds    Json
+  score           Float
+  reason          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestedHero   Hero     @relation(fields: [suggestedHeroId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([suggestedHeroId])
+  @@map("recommendations")
+}
+
+model ApiUsageLog {
+  id          Int      @id @default(autoincrement())
+  provider    String
+  endpoint    String
+  method      String
+  statusCode  Int
+  durationMs  Int
+  success     Boolean
+  payload     Json?
+  requestedAt DateTime @default(now())
+
+  @@index([provider, requestedAt])
+  @@map("api_usage_logs")
+}
+
+model HeroMatchup {
+  heroId      Int
+  vsHeroId    Int
+  wins        Int
+  gamesPlayed Int
+  winRate     Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  hero        Hero     @relation("HeroMatchupHero", fields: [heroId], references: [id], onDelete: Cascade)
+  vsHero      Hero     @relation("HeroMatchupOpponent", fields: [vsHeroId], references: [id], onDelete: Cascade)
+
+  @@id([heroId, vsHeroId])
+  @@index([vsHeroId])
+  @@index([gamesPlayed])
+  @@map("hero_matchups")
+}
+
+model HeroSynergy {
+  heroId        Int
+  withHeroId    Int
+  winsTogether  Int
+  gamesTogether Int
+  winRate       Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  hero          Hero     @relation("HeroSynergyHero", fields: [heroId], references: [id], onDelete: Cascade)
+  withHero      Hero     @relation("HeroSynergyPair", fields: [withHeroId], references: [id], onDelete: Cascade)
+
+  @@id([heroId, withHeroId])
+  @@index([withHeroId])
+  @@index([gamesTogether])
+  @@map("hero_synergies")
+}
