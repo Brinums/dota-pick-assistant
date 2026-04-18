@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="lv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dota Pick Assistant</title>
+    <link rel="stylesheet" href="./styles.css?v=20260510t13" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-line">
+          <div>
+            <h1>Dota 2 Pick Assistant</h1>
+            <p class="subtitle">Draft analītika un ieteikumi vienuviet</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <nav class="top-nav">
+          <button class="nav-btn active" data-view="homeView">Sākums</button>
+          <button class="nav-btn" data-view="heroesView">Varoņi</button>
+          <button class="nav-btn auth-only" data-view="recommendView">Ieteikumi</button>
+          <button class="nav-btn" data-view="statsView">Statistika</button>
+          <button class="nav-btn guest-only" data-view="loginView">Ienākt / Reģistrēties</button>
+          <button class="nav-btn auth-only" data-view="profileView">Konts</button>
+          <button class="nav-btn admin-only" data-view="adminView">Administrēšana</button>
+        </nav>
+
+        <div class="lang-switcher" id="langSwitcher">
+          <button
+            id="langToggleBtn"
+            type="button"
+            class="nav-btn lang-toggle-btn"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            title="Valoda"
+          >
+            <span id="langCurrentLabel">LV</span>
+          </button>
+          <div id="langMenu" class="lang-menu" role="menu" hidden>
+            <button class="lang-option" type="button" data-lang="lv" role="menuitem">
+              <span class="lang-option-code">LV</span>
+              <span class="lang-option-name">Latviešu</span>
+            </button>
+            <button class="lang-option" type="button" data-lang="en" role="menuitem">
+              <span class="lang-option-code">EU</span>
+              <span class="lang-option-name">English</span>
+            </button>
+            <button class="lang-option" type="button" data-lang="ru" role="menuitem">
+              <span class="lang-option-code">RU</span>
+              <span class="lang-option-name">Русский</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-strip">
+          <span id="currentUserInfo" class="auth-user">Viesis</span>
+          <button id="logoutBtn" type="button" class="secondary" hidden>Iziet</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="content">
+        <div id="notice" class="notice" hidden></div>
+
+        <section id="homeView" class="view active">
+          <div class="hero-banner card">
+            <div class="hero-banner-main">
+              <span class="banner-tag">Adaptive Draft Engine</span>
+              <h2>Gudrāki piki pirms katras spēles</h2>
+              <p class="section-help">
+                Veido draftu, analizē varoņu statistiku un iegūsti ieteikumus ar counter/synergy
+                metrikām, izmantojot OpenDota datus un lokālo datubāzi.
+              </p>
+              <div class="hero-banner-actions">
+                <button class="nav-jump-btn auth-only" data-jump-view="recommendView" type="button">Atvērt ieteikumus</button>
+                <button class="secondary nav-jump-btn" data-jump-view="heroesView" type="button">Skatīt varoņus</button>
+              </div>
+            </div>
+            <div class="hero-banner-side">
+              <p class="section-help">Sistēmas fokuss</p>
+              <ul class="compact-list">
+                <li>CounterWR + SynergyWR līdzsvars</li>
+                <li>Lomu filtrēšana pēc drafta vajadzības</li>
+                <li>Automātiska statistikas atlase un kārtošana</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="feature-grid">
+            <div class="card feature-card">
+              <h3>Varoņu analīze</h3>
+              <p class="section-help">Filtrē pēc atribūta, uzbrukuma tipa, lomas un winrate.</p>
+            </div>
+            <div class="card feature-card">
+              <h3>Draft ieteikumi</h3>
+              <p class="section-help">Izveido savas komandas draftu un saņem top kandidātus ar score.</p>
+            </div>
+            <div class="card feature-card">
+              <h3>Meta statistika</h3>
+              <p class="section-help">Pārskati pickrate un winrate tendences vienotā tabulā.</p>
+            </div>
+            <div class="card feature-card">
+              <h3>Admin pārvaldība</h3>
+              <p class="section-help">Sinhronizē varoņus, pro mačus un ieteikumu datus no OpenDota.</p>
+            </div>
+          </div>
+
+        </section>
+
+        <section id="loginView" class="view">
+          <div class="section-header">
+            <h2>Pieslēgšanās</h2>
+            <p class="section-help">Pieslēdzies, lai izmantotu ieteikumu sistēmu un savu kontu.</p>
+          </div>
+
+          <div class="auth-single-wrap">
+            <form id="loginForm" class="card auth-form-card auth-card" autocomplete="off">
+              <div class="auth-field">
+                <label>E-pasts</label>
+                <input name="email" type="email" autocomplete="off" required />
+              </div>
+              <div class="auth-field">
+                <label>Parole</label>
+                <div class="password-field-row">
+                  <input id="loginPassword" name="password" type="password" autocomplete="off" required />
+                  <button
+                    type="button"
+                    class="secondary password-toggle-inline"
+                    data-toggle-password
+                    data-target-input="loginPassword"
+                    aria-label="Rādīt paroli"
+                    title="Rādīt paroli"
+                  >
+                    &#128065;
+                  </button>
+                </div>
+              </div>
+              <button type="submit">Ienākt</button>
+              <button id="openRegisterPanelBtn" type="button" class="secondary auth-switch-btn">Nav konta? Izveidot kontu</button>
+            </form>
+
+          </div>
+        </section>
+
+        <section id="registerView" class="view">
+          <div class="section-header">
+            <h2>Reģistrācija</h2>
+            <p class="section-help">Izveido kontu un pēc tam pieslēdzies sistēmai.</p>
+          </div>
+
+          <div class="auth-single-wrap">
+            <form id="registerForm" class="card auth-form-card auth-card" autocomplete="off">
+              <div class="auth-field">
+                <label>Lietotājvārds</label>
+                <input
+                  name="username"
+                  type="text"
+                  minlength="3"
+                  maxlength="30"
+                  pattern="[A-Za-z0-9_.-]+"
+                  autocomplete="off"
+                  required
+                />
+              </div>
+              <div class="auth-field">
+                <label>E-pasts</label>
+                <input name="email" type="email" autocomplete="off" required />
+              </div>
+              <div class="auth-field">
+                <label>Parole</label>
+                <div class="password-field-row">
+                  <input id="registerPassword" name="password" type="password" minlength="8" autocomplete="off" required />
+                  <button
+                    type="button"
+                    class="secondary password-toggle-inline"
+                    data-toggle-password
+                    data-target-input="registerPassword"
+                    aria-label="Rādīt paroli"
+                    title="Rādīt paroli"
+                  >
+                    &#128065;
+                  </button>
+                </div>
+              </div>
+              <div class="auth-field">
+                <label>Apstiprini paroli</label>
+                <div class="password-field-row">
+                  <input
+                    id="registerPasswordConfirm"
+                    name="passwordConfirm"
+                    type="password"
+                    minlength="8"
+                    autocomplete="off"
+                    required
+                  />
+                  <button
+                    type="button"
+                    class="secondary password-toggle-inline"
+                    data-toggle-password
+                    data-target-input="registerPasswordConfirm"
+                    aria-label="Rādīt paroli"
+                    title="Rādīt paroli"
+                  >
+                    &#128065;
+                  </button>
+                </div>
+              </div>
+              <div class="password-rules">
+                <p>Parolei jāatbilst:</p>
+                <div class="password-rules-list">
+                  <span>8+ simboli</span>
+                  <span>1 lielais burts</span>
+                  <span>1 mazais burts</span>
+                  <span>1 cipars</span>
+                  <span>1 speciālais simbols</span>
+                </div>
+              </div>
+              <button type="submit">Reģistrēties</button>
+              <button id="backToLoginBtn" type="button" class="secondary auth-switch-btn">Jau ir konts? Doties uz pieslēgšanos</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="heroesView" class="view">
+          <div class="section-header">
+            <h2>Varoņu katalogs</h2>
+            <p class="section-help">Meklē, filtrē un kārto varoņus kā klasiskajos Dota statistikas portālos.</p>
+          </div>
+
+          <form id="heroesFilterForm" class="card filter-panel filters filters-3">
+            <div>
+              <label>Meklēt</label>
+              <input name="search" type="text" placeholder="piem. Shadow Fiend" />
+            </div>
+            <div>
+              <label>Atribūts</label>
+              <select name="primaryAttr">
+                <option value="">Visi</option>
+                <option value="str">Strength</option>
+                <option value="agi">Agility</option>
+                <option value="int">Intelligence</option>
+                <option value="all">Universal</option>
+              </select>
+            </div>
+            <div>
+              <label>Uzbrukums</label>
+              <select name="attackType">
+                <option value="">Visi</option>
+                <option value="Melee">Melee</option>
+                <option value="Ranged">Ranged</option>
+              </select>
+            </div>
+            <div>
+              <label>Loma</label>
+              <select name="role">
+                <option value="">Visas</option>
+                <option value="Carry">Carry</option>
+                <option value="Support">Support</option>
+                <option value="Nuker">Nuker</option>
+                <option value="Disabler">Disabler</option>
+                <option value="Initiator">Initiator</option>
+                <option value="Durable">Durable</option>
+                <option value="Escape">Escape</option>
+                <option value="Pusher">Pusher</option>
+                <option value="Jungler">Jungler</option>
+              </select>
+            </div>
+            <div>
+              <label>Kārtot pēc</label>
+              <select name="sortBy">
+                <option value="localizedName">Nosaukums</option>
+                <option value="rawWinRate">Uzvaru procents</option>
+                <option value="proPick">Pro spēļu skaits</option>
+                <option value="createdAt">Datums</option>
+              </select>
+            </div>
+            <div>
+              <label>Secība</label>
+              <select name="order">
+                <option value="asc">Augoši</option>
+                <option value="desc">Dilstoši</option>
+              </select>
+            </div>
+            <button type="submit">Atjaunot sarakstu</button>
+          </form>
+
+          <div class="card">
+            <div class="section-header compact">
+              <h3>Ātrā apskate</h3>
+              <p class="section-help">Pirmie varoņi no atlasītā saraksta.</p>
+            </div>
+            <div class="table-scroll hero-spotlight-scroll">
+              <div id="heroesSpotlightGrid" class="hero-quick-grid"></div>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <div class="table-scroll heroes-table-scroll">
+              <table id="heroesTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Varonis</th>
+                    <th>Atribūts</th>
+                    <th>Uzbrukums</th>
+                    <th>Uzvaru %</th>
+                    <th>Lomas</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="recommendView" class="view">
+          <div class="section-header">
+            <h2>Ieteikumu sistēma</h2>
+            <p class="section-help">Sastādi draftu, salīdzini komandas un ģenerē labāko nākamo piku.</p>
+          </div>
+
+          <form id="recommendForm" class="card recommend-form">
+            <div class="team-columns draft-columns">
+              <div class="card team-card team-card-ally">
+                <h3>Sabiedrotie</h3>
+                <p class="section-help">Izvēlēti varoņi: <span id="allyCount">0</span>/5</p>
+                <div id="allyTeamList" class="team-list"></div>
+                <div class="team-actions">
+                  <button id="chooseAllyBtn" type="button">Izvēlēties varoni</button>
+                  <button id="clearAllyBtn" type="button" class="secondary">Notīrīt</button>
+                </div>
+              </div>
+              <div class="card team-card team-card-enemy">
+                <h3>Pretinieki</h3>
+                <p class="section-help">Izvēlēti varoņi: <span id="enemyCount">0</span>/5</p>
+                <div id="enemyTeamList" class="team-list"></div>
+                <div class="team-actions">
+                  <button id="chooseEnemyBtn" type="button">Izvēlēties varoni</button>
+                  <button id="clearEnemyBtn" type="button" class="secondary">Notīrīt</button>
+                </div>
+              </div>
+            </div>
+            <div class="filters filters-2">
+              <div>
+                <label>Vēlamā loma</label>
+                <select name="desiredRole">
+                  <option value="">Jebkura</option>
+                  <option value="Carry">Carry</option>
+                  <option value="Support">Support</option>
+                  <option value="Nuker">Nuker</option>
+                  <option value="Disabler">Disabler</option>
+                  <option value="Initiator">Initiator</option>
+                  <option value="Durable">Durable</option>
+                  <option value="Escape">Escape</option>
+                  <option value="Pusher">Pusher</option>
+                  <option value="Jungler">Jungler</option>
+                </select>
+              </div>
+              <div>
+                <label>Top N</label>
+                <input name="topN" type="number" min="1" max="10" value="3" />
+              </div>
+              <div>
+                <label>Min. matchup spēles</label>
+                <input name="minMatchupGames" type="number" min="1" value="8" />
+              </div>
+              <div>
+                <label>Min. synergy spēles</label>
+                <input name="minSynergyGames" type="number" min="1" value="8" />
+              </div>
+              <div class="recommend-refresh-options">
+                <label class="recommend-refresh-toggle" for="autoRefreshRecentMatches">
+                  <input
+                    id="autoRefreshRecentMatches"
+                    class="recommend-refresh-checkbox"
+                    name="autoRefreshRecentMatches"
+                    type="checkbox"
+                  />
+                  Papildus ielādēt svaigus mačus no OpenDota
+                </label>
+                <div class="recommend-refresh-limit">
+                  <label for="recentMatchesLimit">Papildus maču skaits</label>
+                  <input
+                    id="recentMatchesLimit"
+                    name="recentMatchesLimit"
+                    type="number"
+                    min="1"
+                    max="20"
+                    value="20"
+                    disabled
+                  />
+                </div>
+                <p class="section-help">
+                  Ja ķeksis nav ieslēgts, ieteikumi tiks veidoti tikai no lokālās datubāzes.
+                </p>
+                <p class="section-help">
+                  Ierobežojums: papildus var ielādēt no 1 līdz 20 mačiem vienā ieteikumu pieprasījumā.
+                </p>
+              </div>
+            </div>
+            <button type="submit">Ģenerēt ieteikumus</button>
+          </form>
+
+          <div class="card result-panel">
+            <div class="section-header compact">
+              <h3>Jaunie ieteikumi</h3>
+              <p class="section-help">Top izvēles pēc score, confidence un draft sinerģijas.</p>
+            </div>
+            <div class="table-scroll recommend-result-scroll">
+              <div id="recommendResult" class="stack"></div>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <div class="section-header compact">
+              <h3>Mani ieteikumi</h3>
+              <button id="loadMyRecommendationsBtn" type="button" class="secondary">Ielādēt</button>
+            </div>
+            <div class="table-scroll recommend-table-scroll">
+              <table id="myRecommendationsTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Varonis</th>
+                    <th>Score</th>
+                    <th>Pamatojums</th>
+                    <th>Darbība</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="statsView" class="view">
+          <div class="section-header">
+            <h2>Statistika</h2>
+            <p class="section-help">Meta pārskats ar filtrēšanu pēc varoņa īpašībām un pick/win datiem.</p>
+          </div>
+
+          <div class="card filter-panel">
+            <h3>Filtri</h3>
+            <form id="statsFilterForm" class="filters filters-3">
+              <div>
+                <label>Meklēt varoni</label>
+                <input name="search" type="text" placeholder="piem. Puck" />
+              </div>
+              <div>
+                <label>Atribūts</label>
+                <select name="primaryAttr">
+                  <option value="">Visi</option>
+                  <option value="str">str</option>
+                  <option value="agi">agi</option>
+                  <option value="int">int</option>
+                  <option value="all">Universal</option>
+                </select>
+              </div>
+              <div>
+                <label>Uzbrukums</label>
+                <select name="attackType">
+                  <option value="">Visi</option>
+                  <option value="Melee">Melee</option>
+                  <option value="Ranged">Ranged</option>
+                </select>
+              </div>
+            </form>
+            <p id="statsFilterSummary" class="section-help">Filtri nav piemēroti.</p>
+          </div>
+
+          <div class="card table-card">
+            <div class="section-header compact">
+              <h3>Varoņu statistika</h3>
+              <div class="stat-sort-actions">
+                <button id="statsWinrateSortBtn" class="secondary tiny-btn" type="button">Winrate ↓</button>
+                <button id="statsPickrateSortBtn" class="secondary tiny-btn" type="button">Pickrate</button>
+              </div>
+            </div>
+            <div class="table-scroll stats-table-scroll">
+              <table id="statsByHeroTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Varonis</th>
+                    <th>Winrate</th>
+                    <th>Pickrate</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="profileView" class="view">
+          <div class="section-header">
+            <h2>Mans profils</h2>
+            <p class="section-help">Pārvaldi konta informāciju un nomaini paroli.</p>
+          </div>
+
+          <div id="profileOverviewPage" class="profile-page profile-page-overview">
+            <div class="card auth-profile-head">
+              <p id="authProfileCurrentInfo" class="section-help">Nav aktīvas sesijas.</p>
+            </div>
+
+            <div class="card profile-summary-card">
+              <div class="profile-summary-row">
+                <span class="profile-label">Lietotājvārds</span>
+                <span id="profileUsernameValue" class="profile-value">-</span>
+                <button id="profileEditUsernameBtn" type="button" class="secondary tiny-btn">Izmainīt</button>
+              </div>
+              <div class="profile-summary-row">
+                <span class="profile-label">E-pasts</span>
+                <span id="profileEmailValue" class="profile-value">-</span>
+                <button id="profileEditEmailBtn" type="button" class="secondary tiny-btn">Izmainīt</button>
+              </div>
+              <div class="profile-summary-row">
+                <span class="profile-label">Parole</span>
+                <span class="profile-value">••••••••</span>
+                <button id="profileEditPasswordBtn" type="button" class="secondary tiny-btn">Izmainīt</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="profileUsernamePage" class="profile-page" hidden>
+            <div class="card profile-editor-card">
+              <div class="profile-editor-head">
+                <h3>Mainīt lietotājvārdu</h3>
+                <button id="profileBackFromUsernameBtn" type="button" class="secondary">Atpakaļ</button>
+              </div>
+              <p class="section-help">Ievadi jauno lietotājvārdu un saglabā izmaiņas.</p>
+              <form id="profileUsernameForm" class="auth-form-card" autocomplete="off">
+                <div class="auth-field">
+                  <label>Lietotājvārds</label>
+                  <input
+                    name="username"
+                    type="text"
+                    minlength="3"
+                    maxlength="30"
+                    pattern="[A-Za-z0-9_.-]+"
+                    autocomplete="off"
+                    required
+                  />
+                </div>
+                <div class="profile-form-actions">
+                  <button type="submit">Saglabāt lietotājvārdu</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div id="profileEmailPage" class="profile-page" hidden>
+            <div class="card profile-editor-card">
+              <div class="profile-editor-head">
+                <h3>Mainīt e-pastu</h3>
+                <button id="profileBackFromEmailBtn" type="button" class="secondary">Atpakaļ</button>
+              </div>
+              <p class="section-help">Ievadi jauno e-pastu un saglabā izmaiņas.</p>
+              <form id="profileEmailForm" class="auth-form-card" autocomplete="off">
+                <div class="auth-field">
+                  <label>E-pasts</label>
+                  <input name="email" type="email" autocomplete="off" required />
+                </div>
+                <div class="profile-form-actions">
+                  <button type="submit">Saglabāt e-pastu</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div id="profilePasswordPage" class="profile-page" hidden>
+            <div class="card profile-editor-card">
+              <div class="profile-editor-head">
+                <h3>Mainīt paroli</h3>
+                <button id="profileBackFromPasswordBtn" type="button" class="secondary">Atpakaļ</button>
+              </div>
+              <p class="section-help">Ievadi esošo un jauno paroli, pēc tam apstiprini izmaiņas.</p>
+              <form id="changePasswordForm" class="auth-form-card" autocomplete="off">
+                <div class="auth-field">
+                  <label>Esošā parole</label>
+                  <div class="password-field-row">
+                    <input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type="password"
+                      autocomplete="off"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="secondary password-toggle-inline"
+                      data-toggle-password
+                      data-target-input="currentPassword"
+                      aria-label="Rādīt paroli"
+                      title="Rādīt paroli"
+                    >
+                      &#128065;
+                    </button>
+                  </div>
+                </div>
+                <div class="auth-field">
+                  <label>Jaunā parole</label>
+                  <div class="password-field-row">
+                    <input
+                      id="newPassword"
+                      name="newPassword"
+                      type="password"
+                      minlength="8"
+                      autocomplete="off"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="secondary password-toggle-inline"
+                      data-toggle-password
+                      data-target-input="newPassword"
+                      aria-label="Rādīt paroli"
+                      title="Rādīt paroli"
+                    >
+                      &#128065;
+                    </button>
+                  </div>
+                </div>
+                <div class="auth-field">
+                  <label>Apstiprini jauno paroli</label>
+                  <div class="password-field-row">
+                    <input
+                      id="newPasswordConfirm"
+                      name="newPasswordConfirm"
+                      type="password"
+                      minlength="8"
+                      autocomplete="off"
+                      required
+                    />
+                    <button
+                      type="button"
+                      class="secondary password-toggle-inline"
+                      data-toggle-password
+                      data-target-input="newPasswordConfirm"
+                      aria-label="Rādīt paroli"
+                      title="Rādīt paroli"
+                    >
+                      &#128065;
+                    </button>
+                  </div>
+                </div>
+                <div class="password-rules">
+                  <p>Parolei jāatbilst:</p>
+                  <div class="password-rules-list">
+                    <span>8+ simboli</span>
+                    <span>1 lielais burts</span>
+                    <span>1 mazais burts</span>
+                    <span>1 cipars</span>
+                    <span>1 speciālais simbols</span>
+                  </div>
+                </div>
+                <div class="profile-form-actions">
+                  <button type="submit">Atjaunināt paroli</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section id="adminView" class="view">
+          <div class="section-header">
+            <h2>Administrēšana</h2>
+            <p class="section-help">Pieejams tikai ADMIN lietotājam.</p>
+          </div>
+
+          <div class="card">
+            <h3>Sinhronizācija</h3>
+            <button id="syncHeroesBtn" type="button" class="inline-action-btn">Sinhronizēt varoņus no OpenDota</button>
+          </div>
+
+          <div class="card table-card">
+            <h3>Lietotāji</h3>
+            <button id="loadUsersBtn" type="button" class="inline-action-btn">Ielādēt lietotājus</button>
+            <div class="table-scroll admin-table-scroll">
+              <table id="usersTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Lietotājvārds</th>
+                    <th>E-pasts</th>
+                    <th>Loma</th>
+                    <th>Darbība</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <h3>Ārējo API pieprasījumu žurnāls</h3>
+            <button id="loadLogsBtn" type="button" class="secondary inline-action-btn">Ielādēt logus</button>
+            <div class="table-scroll admin-table-scroll">
+              <table id="logsTable" class="data-table">
+                <thead>
+                  <tr>
+                    <th>Laiks</th>
+                    <th>Provider</th>
+                    <th>Endpoint</th>
+                    <th>Status</th>
+                    <th>ms</th>
+                    <th>Success</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div id="heroPickerModal" class="modal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3 id="pickerTitle">Izvēlēties varoni</h3>
+          <button id="closeHeroPickerBtn" type="button" class="secondary">Aizvērt</button>
+        </div>
+        <div class="modal-filters">
+          <div>
+            <label>Meklēt pēc nosaukuma</label>
+            <input id="pickerSearchInput" type="text" placeholder="piem. Juggernaut" />
+          </div>
+          <div>
+            <label>Atribūts</label>
+            <select id="pickerAttrSelect">
+              <option value="">Visi</option>
+              <option value="str">Strength</option>
+              <option value="agi">Agility</option>
+              <option value="int">Intelligence</option>
+              <option value="all">Universal</option>
+            </select>
+          </div>
+          <div>
+            <label>Uzbrukums</label>
+            <select id="pickerAttackSelect">
+              <option value="">Visi</option>
+              <option value="Melee">Melee</option>
+              <option value="Ranged">Ranged</option>
+            </select>
+          </div>
+          <div>
+            <label>Loma</label>
+            <select id="pickerRoleSelect">
+              <option value="">Visas</option>
+              <option value="Carry">Carry</option>
+              <option value="Support">Support</option>
+              <option value="Nuker">Nuker</option>
+              <option value="Disabler">Disabler</option>
+              <option value="Initiator">Initiator</option>
+              <option value="Durable">Durable</option>
+              <option value="Escape">Escape</option>
+              <option value="Pusher">Pusher</option>
+              <option value="Jungler">Jungler</option>
+            </select>
+          </div>
+        </div>
+        <div id="heroPickerList" class="picker-list"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js?v=20260510t13"></script>
+  </body>
+</html>

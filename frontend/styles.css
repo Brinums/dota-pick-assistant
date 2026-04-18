@@ -1,0 +1,12 @@
+/*
+  Frontend style entrypoint.
+  Split by concern for easier navigation:
+  - styles/base.css
+  - styles/layout.css
+  - styles/components.css
+  - styles/responsive.css
+*/
+@import "./styles/base.css";
+@import "./styles/layout.css";
+@import "./styles/components.css";
+@import "./styles/responsive.css";
