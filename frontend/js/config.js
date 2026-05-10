@@ -16,7 +16,7 @@ export const state = {
 };
 
 export const API_REQUEST_TIMEOUT_MS = 6000;
-export const RECOMMENDATION_REQUEST_TIMEOUT_MS = 20000;
+export const RECOMMENDATION_REQUEST_TIMEOUT_MS = 60000;
 export const HERO_SYNC_REQUEST_TIMEOUT_MS = 90000;
 export const API_BASE = "https://dota-pick-assistant-production.up.railway.app/api";
 export const ACTIVE_VIEW_KEY = "dpa_active_view";
