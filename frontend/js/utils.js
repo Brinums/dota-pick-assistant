@@ -22,6 +22,24 @@ export function slugifyHeroName(localizedName) {
     .replace(/^_+|_+$/g, "");
 }
 
+const HERO_IMAGE_NAME_OVERRIDES = {
+  "anti-mage": "antimage",
+  "clockwerk": "rattletrap",
+  "doom": "doom_bringer",
+  "io": "wisp",
+  "nature's prophet": "furion",
+  "necrophos": "necrolyte",
+  "outworld destroyer": "obsidian_destroyer",
+  "queen of pain": "queenofpain",
+  "shadow fiend": "nevermore",
+  "timbersaw": "shredder",
+  "treant protector": "treant",
+  "underlord": "abyssal_underlord",
+  "vengeful spirit": "vengefulspirit",
+  "windranger": "windrunner",
+  "wraith king": "skeleton_king",
+};
+
 export function getHeroImageUrlByNameOrId(hero) {
   if (!hero) {
     return "";
@@ -63,7 +81,7 @@ export function getHeroImageUrlByNameOrId(hero) {
   }
 
   if (!shortName) {
-    shortName = slugifyHeroName(hero.localizedName);
+    shortName = HERO_IMAGE_NAME_OVERRIDES[normalizedLocalizedName] || slugifyHeroName(hero.localizedName);
   }
 
   if (!shortName) {

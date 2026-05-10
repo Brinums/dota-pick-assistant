@@ -204,6 +204,7 @@ function includeJoinedData() {
     suggestedHero: {
       select: {
         id: true,
+        name: true,
         localizedName: true,
         primaryAttr: true,
         attackType: true,
