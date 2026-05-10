@@ -70,8 +70,8 @@ const recommendationCreateAdaptiveSchema = z
     topN: z.number().int().min(1).max(10).default(3),
     minMatchupGames: z.number().int().min(1).max(2000).default(8),
     minSynergyGames: z.number().int().min(1).max(2000).default(8),
-    autoRefreshRecentMatches: z.boolean().default(true),
-    recentMatchesLimit: z.number().int().min(1).max(20).default(20),
+    autoRefreshRecentMatches: z.boolean().default(false),
+    recentMatchesLimit: z.number().int().min(1).max(10).default(5),
   })
   .refine((data) => new Set(data.currentTeam).size === data.currentTeam.length, {
     message: "currentTeam contains duplicate hero ids",

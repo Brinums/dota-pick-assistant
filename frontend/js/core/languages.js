@@ -118,7 +118,7 @@ const TEXTS = {
     "recommend.extraRefresh": "Papildus ielādēt svaigus mačus no OpenDota",
     "recommend.extraMatchCount": "Papildus maču skaits",
     "recommend.extraHelp": "Ja ķeksis nav ieslēgts, ieteikumi tiks veidoti tikai no lokālās datubāzes.",
-    "recommend.extraLimit": "Ierobežojums: papildus var ielādēt no 1 līdz 20 mačiem vienā ieteikumu pieprasījumā.",
+    "recommend.extraLimit": "Ierobežojums: papildus var ielādēt no 1 līdz 10 mačiem vienā ieteikumu pieprasījumā.",
     "recommend.generate": "Ģenerēt ieteikumus",
     "recommend.newTitle": "Jaunie ieteikumi",
     "recommend.newHelp": "Top izvēles pēc score, confidence un draft sinerģijas.",
@@ -349,7 +349,7 @@ const TEXTS = {
     "recommend.extraRefresh": "Load fresh matches from OpenDota",
     "recommend.extraMatchCount": "Extra match count",
     "recommend.extraHelp": "If unchecked, recommendations are built only from local database.",
-    "recommend.extraLimit": "Limit: you can load from 1 to 20 extra matches per recommendation request.",
+    "recommend.extraLimit": "Limit: you can load from 1 to 10 extra matches per recommendation request.",
     "recommend.generate": "Generate recommendations",
     "recommend.newTitle": "New recommendations",
     "recommend.newHelp": "Top picks by score, confidence and draft synergy.",
@@ -580,7 +580,7 @@ const TEXTS = {
     "recommend.extraRefresh": "Дополнительно загрузить свежие матчи из OpenDota",
     "recommend.extraMatchCount": "Количество доп. матчей",
     "recommend.extraHelp": "Если галочка выключена, рекомендации строятся только из локальной базы.",
-    "recommend.extraLimit": "Ограничение: можно загрузить от 1 до 20 доп. матчей за один запрос рекомендаций.",
+    "recommend.extraLimit": "Ограничение: можно загрузить от 1 до 10 доп. матчей за один запрос рекомендаций.",
     "recommend.generate": "Сгенерировать рекомендации",
     "recommend.newTitle": "Новые рекомендации",
     "recommend.newHelp": "Топ-варианты по score, confidence и синергии драфта.",
@@ -932,13 +932,10 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     }
 
     const translatedText = t(key);
-    const textNode = [...element.childNodes].find((node) => node.nodeType === Node.TEXT_NODE);
-
-    if (textNode) {
-      textNode.textContent = ` ${translatedText}`;
-    } else {
-      element.appendChild(document.createTextNode(` ${translatedText}`));
-    }
+    [...element.childNodes]
+      .filter((node) => node.nodeType === Node.TEXT_NODE)
+      .forEach((node) => node.remove());
+    element.appendChild(document.createTextNode(` ${translatedText}`));
   }
 
   function setOptionText(selectSelector, value, key) {

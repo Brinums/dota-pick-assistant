@@ -229,7 +229,7 @@ export function createRecommendationsFeature({
 
       const isEnabled = Boolean(autoRefreshRecentMatchesCheckbox?.checked);
       recentMatchesLimitInput.disabled = !isEnabled;
-      const normalizedLimit = Math.max(1, Math.min(20, Number(recentMatchesLimitInput.value) || 20));
+      const normalizedLimit = Math.max(1, Math.min(10, Number(recentMatchesLimitInput.value) || 5));
       recentMatchesLimitInput.value = String(normalizedLimit);
     };
 
@@ -280,7 +280,7 @@ export function createRecommendationsFeature({
           if (payload.autoRefreshRecentMatches) {
             payload.recentMatchesLimit = Math.max(
               1,
-              Math.min(20, Number(formData.get("recentMatchesLimit") || 20)),
+              Math.min(10, Number(formData.get("recentMatchesLimit") || 5)),
             );
           }
 
