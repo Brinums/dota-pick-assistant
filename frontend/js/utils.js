@@ -91,14 +91,14 @@ export function getHeroImageUrlByNameOrId(hero) {
   return `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${shortName}.png`;
 }
 
-export function compactRoleBadges(roles) {
+export function compactRoleBadges(roles, formatRole = toTitleCase) {
   if (!Array.isArray(roles) || !roles.length) {
     return "<span class='section-help'>-</span>";
   }
 
   return roles
     .slice(0, 4)
-    .map((role) => `<span class=\"role-badge\">${toTitleCase(role)}</span>`)
+    .map((role) => `<span class=\"role-badge\">${formatRole(role)}</span>`)
     .join("");
 }
 

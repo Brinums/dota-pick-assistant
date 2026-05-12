@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
+import { findUserCredentialConflict } from "../utils/user-uniqueness.js";
 
 const listUsersSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -13,6 +14,12 @@ const listUsersSchema = z.object({
 const roleUpdateSchema = z.object({
   role: z.enum(["USER", "ADMIN"]),
 });
+
+const PROTECTED_ADMIN_ID = 1;
+
+function isProtectedAdmin(userId) {
+  return Number(userId) === PROTECTED_ADMIN_ID;
+}
 
 const profileUpdateSchema = z
   .object({
@@ -116,6 +123,23 @@ export async function updateUserRole(req, res, next) {
 
     const { role } = roleUpdateSchema.parse(req.body);
 
+    if (isProtectedAdmin(userId)) {
+      return res.status(400).json({ message: "The main administrator account cannot be changed" });
+    }
+
+    if (Number(req.user.userId) === userId && role !== "ADMIN") {
+      return res.status(400).json({ message: "You cannot remove your own ADMIN role" });
+    }
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data: { role },
@@ -143,12 +167,24 @@ export async function updateMyProfile(req, res, next) {
   try {
     const { username, email } = profileUpdateSchema.parse(req.body);
     const userId = req.user.userId;
+    const normalizedUsername = username !== undefined ? username.trim() : undefined;
+    const normalizedEmail = email !== undefined ? email.toLowerCase() : undefined;
+
+    const conflict = await findUserCredentialConflict({
+      username: normalizedUsername,
+      email: normalizedEmail,
+      excludeUserId: userId,
+    });
+
+    if (conflict) {
+      return res.status(409).json(conflict);
+    }
 
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(username !== undefined ? { username: username.trim() } : {}),
-        ...(email !== undefined ? { email: email.toLowerCase() } : {}),
+        ...(normalizedUsername !== undefined ? { username: normalizedUsername } : {}),
+        ...(normalizedEmail !== undefined ? { email: normalizedEmail } : {}),
       },
       select: {
         id: true,
@@ -170,9 +206,56 @@ export async function updateMyProfile(req, res, next) {
     }
 
     if (error.code === "P2002") {
-      return res.status(409).json({ message: "Email or username is already in use" });
+      const target = Array.isArray(error.meta?.target) ? error.meta.target[0] : undefined;
+      return res.status(409).json({
+        message: "Email or username is already in use",
+        field: target === "email" || target === "username" ? target : undefined,
+      });
     }
 
+    if (error.code === "P2025") {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return next(error);
+  }
+}
+
+export async function deleteUser(req, res, next) {
+  try {
+    const userId = Number(req.params.id);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    if (Number(req.user.userId) === userId) {
+      return res.status(400).json({ message: "You cannot delete your own account from admin panel" });
+    }
+
+    if (isProtectedAdmin(userId)) {
+      return res.status(400).json({ message: "The main administrator account cannot be deleted" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await prisma.$transaction([
+      prisma.recommendation.deleteMany({ where: { userId } }),
+      prisma.match.updateMany({
+        where: { userId },
+        data: { userId: null },
+      }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
+
+    return res.json({ message: "User deleted" });
+  } catch (error) {
     if (error.code === "P2025") {
       return res.status(404).json({ message: "User not found" });
     }

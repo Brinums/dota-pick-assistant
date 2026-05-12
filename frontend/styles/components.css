@@ -246,6 +246,23 @@
   justify-self: start;
 }
 
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.danger-btn {
+  background: linear-gradient(180deg, rgba(194, 63, 47, 0.95), rgba(142, 42, 32, 0.95));
+  border-color: rgba(233, 112, 93, 0.72);
+  color: #fff5f2;
+  box-shadow: inset 0 1px 0 rgba(255, 218, 211, 0.22);
+}
+
+.danger-btn:hover {
+  background: linear-gradient(180deg, rgba(211, 74, 57, 0.98), rgba(156, 47, 36, 0.98));
+}
+
 .password-rules {
   border: 1px solid rgba(97, 113, 142, 0.45);
   border-radius: 10px;

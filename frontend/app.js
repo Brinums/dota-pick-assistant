@@ -291,6 +291,7 @@ async function bootstrap() {
       if (currentUserInfo) {
         currentUserInfo.textContent = getCurrentUserLabel();
       }
+      heroesFeature?.rerenderHeroes();
       heroesFeature?.renderTeamSelections();
       heroesFeature?.renderHeroPickerList();
       statsFeature?.rerenderStats?.();

@@ -112,6 +112,14 @@ const TEXTS = {
     "common.clear": "Notīrīt",
     "recommend.desiredRole": "Vēlamā loma",
     "recommend.roleAny": "Jebkura",
+    "heroRole.carry": "Kerijs",
+    "heroRole.support": "Atbalsts",
+    "heroRole.nuker": "Burvestību bojājumi",
+    "heroRole.disabler": "Kontrole",
+    "heroRole.initiator": "Iniciators",
+    "heroRole.durable": "Izturīgs",
+    "heroRole.escape": "Bēgšana",
+    "heroRole.pusher": "Līniju spiediens",
     "recommend.topN": "Top N",
     "recommend.minMatchup": "Min. matchup spēles",
     "recommend.minSynergy": "Min. synergy spēles",
@@ -146,6 +154,7 @@ const TEXTS = {
     "common.calculating": "Aprēķina...",
     "common.games": "spēles",
     "common.delete": "Dzēst",
+    "common.deleting": "Dzēš...",
     "auth.loginRequired": "Vispirms jāpieslēdzas sistēmai.",
     "recommend.table.id": "ID",
     "recommend.table.hero": "Varonis",
@@ -207,6 +216,10 @@ const TEXTS = {
     "admin.noUsers": "Nav lietotāju.",
     "admin.roleUpdated": "Loma atjaunota.",
     "admin.cannotRemoveOwnAdmin": "Savu ADMIN lomu noņemt nedrīkst.",
+    "admin.cannotDeleteOwnUser": "Pašreizējo administratoru šeit dzēst nedrīkst.",
+    "admin.protectedAdmin": "Galvenais administrators ir aizsargāts.",
+    "admin.confirmDeleteUser": "Vai tiešām dzēst lietotāju {user}?",
+    "admin.userDeleted": "Lietotājs dzēsts.",
     "admin.logs": "Ārējo API pieprasījumu žurnāls",
     "admin.loadLogs": "Ielādēt logus",
     "admin.logsLoaded": "Logi ielādēti.",
@@ -343,6 +356,14 @@ const TEXTS = {
     "common.clear": "Clear",
     "recommend.desiredRole": "Desired role",
     "recommend.roleAny": "Any",
+    "heroRole.carry": "Carry",
+    "heroRole.support": "Support",
+    "heroRole.nuker": "Nuker",
+    "heroRole.disabler": "Disabler",
+    "heroRole.initiator": "Initiator",
+    "heroRole.durable": "Durable",
+    "heroRole.escape": "Escape",
+    "heroRole.pusher": "Pusher",
     "recommend.topN": "Top N",
     "recommend.minMatchup": "Min matchup games",
     "recommend.minSynergy": "Min synergy games",
@@ -377,6 +398,7 @@ const TEXTS = {
     "common.calculating": "Calculating...",
     "common.games": "games",
     "common.delete": "Delete",
+    "common.deleting": "Deleting...",
     "auth.loginRequired": "Please log in first.",
     "recommend.table.id": "ID",
     "recommend.table.hero": "Hero",
@@ -438,6 +460,10 @@ const TEXTS = {
     "admin.noUsers": "No users.",
     "admin.roleUpdated": "Role updated.",
     "admin.cannotRemoveOwnAdmin": "You cannot remove your own ADMIN role.",
+    "admin.cannotDeleteOwnUser": "You cannot delete the current administrator here.",
+    "admin.protectedAdmin": "The main administrator is protected.",
+    "admin.confirmDeleteUser": "Delete user {user}?",
+    "admin.userDeleted": "User deleted.",
     "admin.logs": "External API request log",
     "admin.loadLogs": "Load logs",
     "admin.logsLoaded": "Logs loaded.",
@@ -574,6 +600,14 @@ const TEXTS = {
     "common.clear": "Очистить",
     "recommend.desiredRole": "Желаемая роль",
     "recommend.roleAny": "Любая",
+    "heroRole.carry": "Керри",
+    "heroRole.support": "Поддержка",
+    "heroRole.nuker": "Нюкер",
+    "heroRole.disabler": "Контроль",
+    "heroRole.initiator": "Инициатор",
+    "heroRole.durable": "Выживаемость",
+    "heroRole.escape": "Побег",
+    "heroRole.pusher": "Пушер",
     "recommend.topN": "Топ N",
     "recommend.minMatchup": "Мин. matchup игр",
     "recommend.minSynergy": "Мин. synergy игр",
@@ -608,6 +642,7 @@ const TEXTS = {
     "common.calculating": "Расчёт...",
     "common.games": "игр",
     "common.delete": "Удалить",
+    "common.deleting": "Удаление...",
     "auth.loginRequired": "Сначала войдите в систему.",
     "recommend.table.id": "ID",
     "recommend.table.hero": "Герой",
@@ -669,6 +704,10 @@ const TEXTS = {
     "admin.noUsers": "Нет пользователей.",
     "admin.roleUpdated": "Роль обновлена.",
     "admin.cannotRemoveOwnAdmin": "Нельзя снять роль ADMIN у текущего администратора.",
+    "admin.cannotDeleteOwnUser": "Нельзя удалить текущего администратора здесь.",
+    "admin.protectedAdmin": "Главный администратор защищён.",
+    "admin.confirmDeleteUser": "Удалить пользователя {user}?",
+    "admin.userDeleted": "Пользователь удалён.",
     "admin.logs": "Журнал запросов внешнего API",
     "admin.loadLogs": "Загрузить логи",
     "admin.logsLoaded": "Логи загружены.",
@@ -831,6 +870,8 @@ const MESSAGE_TRANSLATIONS = {
   },
 };
 
+const HERO_ROLE_OPTIONS = ["Carry", "Support", "Nuker", "Disabler", "Initiator", "Durable", "Escape", "Pusher"];
+
 function safeString(value) {
   return String(value ?? "").trim();
 }
@@ -946,6 +987,12 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     }
   }
 
+  function setHeroRoleOptionTexts(selectSelector) {
+    HERO_ROLE_OPTIONS.forEach((role) => {
+      setOptionText(selectSelector, role, `heroRole.${role.toLowerCase()}`);
+    });
+  }
+
   function applyTranslations() {
     const language = getLanguage();
     document.documentElement.setAttribute("lang", language);
@@ -1055,6 +1102,7 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     setOptionText("#heroesFilterForm select[name='attackType']", "Melee", "attack.melee");
     setOptionText("#heroesFilterForm select[name='attackType']", "Ranged", "attack.ranged");
     setOptionText("#heroesFilterForm select[name='role']", "", "common.allF");
+    setHeroRoleOptionTexts("#heroesFilterForm select[name='role']");
     setOptionText("#heroesFilterForm select[name='sortBy']", "localizedName", "heroes.sort.name");
     setOptionText("#heroesFilterForm select[name='sortBy']", "rawWinRate", "heroes.sort.winrate");
     setOptionText("#heroesFilterForm select[name='sortBy']", "proPick", "heroes.sort.propick");
@@ -1076,6 +1124,7 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     setText("#clearEnemyBtn", "common.clear");
     setText("#recommendForm .filters > div:nth-child(1) label", "recommend.desiredRole");
     setOptionText("#recommendForm select[name='desiredRole']", "", "recommend.roleAny");
+    setHeroRoleOptionTexts("#recommendForm select[name='desiredRole']");
     setText("#recommendForm .filters > div:nth-child(2) label", "recommend.topN");
     setText("#recommendForm .filters > div:nth-child(3) label", "recommend.minMatchup");
     setText("#recommendForm .filters > div:nth-child(4) label", "recommend.minSynergy");
@@ -1198,6 +1247,7 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     setOptionText("#pickerAttackSelect", "Melee", "attack.melee");
     setOptionText("#pickerAttackSelect", "Ranged", "attack.ranged");
     setOptionText("#pickerRoleSelect", "", "common.allF");
+    setHeroRoleOptionTexts("#pickerRoleSelect");
 
     const passwordButtons = document.querySelectorAll("button[data-toggle-password]");
     passwordButtons.forEach((btn) => {

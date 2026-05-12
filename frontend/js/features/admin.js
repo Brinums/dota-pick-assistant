@@ -10,6 +10,15 @@ export function createAdminFeature({
   getLanguage = null,
 }) {
   const translate = (key, fallback) => (typeof t === "function" ? t(key, fallback) : fallback);
+  const PROTECTED_ADMIN_ID = 1;
+
+  async function loadUsersList({ showNotice = false } = {}) {
+    const result = await apiRequest("/users?limit=100", { auth: true });
+    renderUsers(result.data || []);
+    if (showNotice) {
+      setNotice(translate("admin.usersLoaded", "Lietotāji ielādēti."), "success");
+    }
+  }
 
   function renderUsers(rows) {
     const tbody = document.querySelector("#usersTable tbody");
@@ -21,11 +30,23 @@ export function createAdminFeature({
     }
 
     rows.forEach((user) => {
-      const isOwnAdmin = state.user?.role === "ADMIN" && Number(user.id) === Number(state.user?.id);
-      const roleSelectDisabled = isOwnAdmin ? "disabled" : "";
-      const saveDisabled = isOwnAdmin ? "disabled" : "";
-      const saveTitle = isOwnAdmin
+      const isProtectedAdmin = Number(user.id) === PROTECTED_ADMIN_ID;
+      const isCurrentUser = Number(user.id) === Number(state.user?.id);
+      const isOwnAdmin = state.user?.role === "ADMIN" && isCurrentUser;
+      const roleLocked = isProtectedAdmin || isOwnAdmin;
+      const deleteLocked = isProtectedAdmin || isCurrentUser;
+      const roleSelectDisabled = roleLocked ? "disabled" : "";
+      const saveDisabled = roleLocked ? "disabled" : "";
+      const deleteDisabled = deleteLocked ? "disabled" : "";
+      const saveTitle = isProtectedAdmin
+        ? `title="${translate("admin.protectedAdmin", "Galvenais administrators ir aizsargāts.")}"`
+        : isOwnAdmin
         ? `title="${translate("admin.cannotRemoveOwnAdmin", "Savu ADMIN lomu noņemt nedrīkst.")}"`
+        : "";
+      const deleteTitle = isProtectedAdmin
+        ? `title="${translate("admin.protectedAdmin", "Galvenais administrators ir aizsargāts.")}"`
+        : isCurrentUser
+        ? `title="${translate("admin.cannotDeleteOwnUser", "Pašreizējo administratoru šeit dzēst nedrīkst.")}"`
         : "";
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -38,7 +59,12 @@ export function createAdminFeature({
             <option value="ADMIN" ${user.role === "ADMIN" ? "selected" : ""}>ADMIN</option>
           </select>
         </td>
-        <td><button data-save-user="${user.id}" class="secondary" ${saveDisabled} ${saveTitle}>${translate("common.save", "Saglabāt")}</button></td>
+        <td>
+          <div class="table-actions">
+            <button data-save-user="${user.id}" class="secondary" ${saveDisabled} ${saveTitle}>${translate("common.save", "Saglabāt")}</button>
+            <button data-delete-user="${user.id}" class="danger-btn" ${deleteDisabled} ${deleteTitle}>${translate("common.delete", "Dzēst")}</button>
+          </div>
+        </td>
       `;
       tbody.appendChild(tr);
     });
@@ -63,6 +89,34 @@ export function createAdminFeature({
         } catch (error) {
           setNotice(error.message);
         }
+      });
+    });
+
+    tbody.querySelectorAll("button[data-delete-user]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const userId = btn.dataset.deleteUser;
+        const row = rows.find((item) => Number(item.id) === Number(userId));
+        const userLabel = row?.username || row?.email || `ID ${userId}`;
+        const confirmed = window.confirm(
+          translate("admin.confirmDeleteUser", "Vai tiešām dzēst lietotāju {user}?").replace("{user}", userLabel),
+        );
+
+        if (!confirmed) {
+          return;
+        }
+
+        await runWithButtonLoading(btn, translate("common.deleting", "Dzēš..."), async () => {
+          try {
+            await apiRequest(`/users/${userId}`, {
+              method: "DELETE",
+              auth: true,
+            });
+            setNotice(translate("admin.userDeleted", "Lietotājs dzēsts."), "success");
+            await loadUsersList();
+          } catch (error) {
+            setNotice(error.message);
+          }
+        });
       });
     });
   }
@@ -135,9 +189,7 @@ export function createAdminFeature({
     loadUsersBtn.addEventListener("click", async () => {
       await runWithButtonLoading(loadUsersBtn, translate("common.loading", "Ielādē..."), async () => {
         try {
-          const result = await apiRequest("/users?limit=100", { auth: true });
-          renderUsers(result.data || []);
-          setNotice(translate("admin.usersLoaded", "Lietotāji ielādēti."), "success");
+          await loadUsersList({ showNotice: true });
         } catch (error) {
           setNotice(error.message);
         }

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
+import { findUserCredentialConflict } from "../utils/user-uniqueness.js";
 import { signAccessToken } from "../utils/jwt.js";
 
 const registerSchema = z.object({
@@ -32,14 +33,26 @@ const loginSchema = z.object({
 export async function register(req, res, next) {
   try {
     const { username, email, password } = registerSchema.parse(req.body);
+    const normalizedUsername = username.trim();
+    const normalizedEmail = email.toLowerCase();
+
+    const conflict = await findUserCredentialConflict({
+      username: normalizedUsername,
+      email: normalizedEmail,
+    });
+
+    if (conflict) {
+      return res.status(409).json(conflict);
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const usersCount = await prisma.user.count();
     const nextRole = usersCount === 0 ? "ADMIN" : "USER";
 
     const user = await prisma.user.create({
       data: {
-        username: username.trim(),
-        email: email.toLowerCase(),
+        username: normalizedUsername,
+        email: normalizedEmail,
         passwordHash,
         role: nextRole,
       },
@@ -64,7 +77,11 @@ export async function register(req, res, next) {
     }
 
     if (error.code === "P2002") {
-      return res.status(409).json({ message: "User with this email or username already exists" });
+      const target = Array.isArray(error.meta?.target) ? error.meta.target[0] : undefined;
+      return res.status(409).json({
+        message: "Email or username is already in use",
+        field: target === "email" || target === "username" ? target : undefined,
+      });
     }
 
     return next(error);

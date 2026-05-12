@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   changeMyPassword,
+  deleteUser,
   listUsers,
   updateMyProfile,
   updateUserRole,
@@ -15,5 +16,6 @@ router.patch("/me/password", requireAuth, changeMyPassword);
 router.use(requireAuth, requireRole("ADMIN"));
 router.get("/", listUsers);
 router.patch("/:id/role", updateUserRole);
+router.delete("/:id", deleteUser);
 
 export default router;

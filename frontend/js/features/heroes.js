@@ -8,6 +8,8 @@ export function createHeroesFeature({
   getHeroImageUrlByNameOrId,
   t = null,
 }) {
+  let currentHeroRows = [];
+
   function getHeroById(heroId) {
     return state.heroCatalog.find((hero) => Number(hero.id) === Number(heroId)) || null;
   }
@@ -26,6 +28,19 @@ export function createHeroesFeature({
     }
 
     return "-";
+  }
+
+  function formatHeroRole(role) {
+    const normalizedRole = String(role || "").trim().toLowerCase();
+    if (!normalizedRole) {
+      return "-";
+    }
+
+    return typeof t === "function" ? t(`heroRole.${normalizedRole}`, role) : role;
+  }
+
+  function renderRoleBadges(roles) {
+    return compactRoleBadges(roles, formatHeroRole);
   }
 
   function renderTeamList(containerId, heroIds, side) {
@@ -191,7 +206,7 @@ export function createHeroesFeature({
           <div class="picker-meta">
             ${formatPrimaryAttr(hero.primaryAttr)} · ${attackType}
           </div>
-            <div class="role-badges">${compactRoleBadges(hero.roles)}</div>
+            <div class="role-badges">${renderRoleBadges(hero.roles)}</div>
           </div>
         </div>
         <button type="button" data-add-hero-id="${hero.id}" ${eligibility.ok ? "" : "disabled"}>
@@ -266,6 +281,7 @@ export function createHeroesFeature({
   }
 
   function renderHeroes(rows) {
+    currentHeroRows = Array.isArray(rows) ? rows : [];
     const tbody = document.querySelector("#heroesTable tbody");
     const spotlightGrid = document.querySelector("#heroesSpotlightGrid");
     tbody.innerHTML = "";
@@ -273,7 +289,7 @@ export function createHeroesFeature({
       spotlightGrid.innerHTML = "";
     }
 
-    if (!rows.length) {
+    if (!currentHeroRows.length) {
       tbody.innerHTML = `<tr><td colspan="5">${typeof t === "function" ? t("common.noData", "Nav datu.") : "Nav datu."}</td></tr>`;
       if (spotlightGrid) {
         spotlightGrid.innerHTML = `<p class='section-help'>${
@@ -285,7 +301,7 @@ export function createHeroesFeature({
       return;
     }
 
-    rows.forEach((hero) => {
+    currentHeroRows.forEach((hero) => {
       const attackType = formatAttackType(hero.attackType);
       const imageUrl = getHeroImageUrlByNameOrId(hero);
       const tr = document.createElement("tr");
@@ -299,13 +315,13 @@ export function createHeroesFeature({
         <td>${formatPrimaryAttr(hero.primaryAttr)}</td>
         <td>${attackType}</td>
         <td><strong>${Number(hero.rawWinRate || 0).toFixed(2)}%</strong></td>
-        <td><div class="role-badges">${compactRoleBadges(hero.roles)}</div></td>
+        <td><div class="role-badges">${renderRoleBadges(hero.roles)}</div></td>
       `;
       tbody.appendChild(tr);
     });
 
     if (spotlightGrid) {
-      rows.slice(0, 12).forEach((hero) => {
+      currentHeroRows.slice(0, 12).forEach((hero) => {
         const imageUrl = getHeroImageUrlByNameOrId(hero);
         const card = document.createElement("article");
         card.className = "hero-quick-card";
@@ -322,6 +338,10 @@ export function createHeroesFeature({
         spotlightGrid.appendChild(card);
       });
     }
+  }
+
+  function rerenderHeroes() {
+    renderHeroes(currentHeroRows);
   }
 
   async function loadHeroes() {
@@ -372,6 +392,7 @@ export function createHeroesFeature({
     loadHeroCatalogForRecommendation,
     loadHeroes,
     openHeroPicker,
+    rerenderHeroes,
     renderHeroPickerList,
     renderTeamSelections,
     wireHeroes,
