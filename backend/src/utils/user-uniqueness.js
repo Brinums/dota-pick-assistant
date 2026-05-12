@@ -1,59 +1,66 @@
 import { prisma } from "../lib/prisma.js";
 
-export async function findUserCredentialConflict({ email, username, excludeUserId } = {}) {
+function toConflictIssue(field, message) {
+  return {
+    field,
+    path: [field],
+    message,
+  };
+}
+
+export async function findUserCredentialConflicts({ email, username, excludeUserId } = {}) {
   const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
   const normalizedUsername = typeof username === "string" ? username.trim() : "";
+  const normalizedExcludeUserId = Number(excludeUserId || 0);
+  const conflicts = [];
 
-  const checks = [];
   if (normalizedEmail) {
-    checks.push({ email: normalizedEmail });
+    const emailConflict = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: "insensitive",
+        },
+        ...(normalizedExcludeUserId ? { id: { not: normalizedExcludeUserId } } : {}),
+      },
+      select: { id: true },
+    });
+
+    if (emailConflict) {
+      conflicts.push(toConflictIssue("email", "E-pasts jau tiek izmantots."));
+    }
   }
+
   if (normalizedUsername) {
-    checks.push({ username: { equals: normalizedUsername, mode: "insensitive" } });
+    const usernameConflict = await prisma.user.findFirst({
+      where: {
+        username: {
+          equals: normalizedUsername,
+          mode: "insensitive",
+        },
+        ...(normalizedExcludeUserId ? { id: { not: normalizedExcludeUserId } } : {}),
+      },
+      select: { id: true },
+    });
+
+    if (usernameConflict) {
+      conflicts.push(toConflictIssue("username", "Lietotājvārds jau tiek izmantots."));
+    }
   }
 
-  if (!checks.length) {
+  return conflicts;
+}
+
+export async function findUserCredentialConflict({ email, username, excludeUserId } = {}) {
+  const conflicts = await findUserCredentialConflicts({ email, username, excludeUserId });
+
+  if (!conflicts.length) {
     return null;
-  }
-
-  const where = {
-    OR: checks,
-    ...(excludeUserId ? { id: { not: Number(excludeUserId) } } : {}),
-  };
-
-  const conflict = await prisma.user.findFirst({
-    where,
-    select: {
-      id: true,
-      email: true,
-      username: true,
-    },
-  });
-
-  if (!conflict) {
-    return null;
-  }
-
-  if (normalizedEmail && conflict.email.toLowerCase() === normalizedEmail) {
-    return {
-      field: "email",
-      message: "Email is already in use",
-    };
-  }
-
-  if (
-    normalizedUsername &&
-    conflict.username &&
-    conflict.username.toLowerCase() === normalizedUsername.toLowerCase()
-  ) {
-    return {
-      field: "username",
-      message: "Username is already in use",
-    };
   }
 
   return {
-    field: "username",
-    message: "Email or username is already in use",
+    field: conflicts[0]?.path?.[0],
+    message: conflicts.map((issue) => issue.message).join(" "),
+    errors: conflicts,
   };
 }

@@ -131,23 +131,50 @@ export function toValidationError(message, field = "") {
   return error;
 }
 
-export function parseBackendField(error, fieldMap = {}) {
-  if (error?.field) {
-    return error.field;
-  }
+export function parseBackendFields(error, fieldMap = {}) {
+  const fields = [];
+  const addField = (rawField) => {
+    const field = String(rawField || "").trim();
+    if (!field) {
+      return;
+    }
+
+    const mappedField = fieldMap[field] || field;
+    if (!fields.includes(mappedField)) {
+      fields.push(mappedField);
+    }
+  };
+
+  addField(error?.field);
 
   if (Array.isArray(error?.errors)) {
     for (const issue of error.errors) {
       const path = Array.isArray(issue?.path) ? issue.path : [];
-      const rawField = String(path[path.length - 1] || "").trim();
-      if (!rawField) {
-        continue;
-      }
-      return fieldMap[rawField] || rawField;
+      addField(path[path.length - 1]);
+      addField(issue?.field);
     }
   }
 
-  return "";
+  return fields;
+}
+
+export function parseBackendField(error, fieldMap = {}) {
+  return parseBackendFields(error, fieldMap)[0] || "";
+}
+
+export function formatBackendErrorMessage(error) {
+  if (Array.isArray(error?.errors)) {
+    const messages = error.errors
+      .map((issue) => String(issue?.message || "").trim())
+      .filter(Boolean);
+    const uniqueMessages = [...new Set(messages)];
+
+    if (uniqueMessages.length) {
+      return uniqueMessages.join(" ");
+    }
+  }
+
+  return error?.message || "Neizdevās apstrādāt pieprasījumu.";
 }
 
 export function attachFieldClearHandlers(form) {

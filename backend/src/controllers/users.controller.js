@@ -21,6 +21,25 @@ function isProtectedAdmin(userId) {
   return Number(userId) === PROTECTED_ADMIN_ID;
 }
 
+function getZodIssues(error) {
+  return Array.isArray(error.issues) ? error.issues : error.errors || [];
+}
+
+function getUniqueConstraintError(target) {
+  const field = target === "email" || target === "username" ? target : undefined;
+  const messageByField = {
+    email: "E-pasts jau tiek izmantots.",
+    username: "Lietotājvārds jau tiek izmantots.",
+  };
+  const message = field ? messageByField[field] : "E-pasts vai lietotājvārds jau tiek izmantots.";
+
+  return {
+    message,
+    field,
+    errors: field ? [{ field, path: [field], message }] : [],
+  };
+}
+
 const profileUpdateSchema = z
   .object({
     username: z
@@ -107,7 +126,7 @@ export async function listUsers(req, res, next) {
     });
   } catch (error) {
     if (error.name === "ZodError") {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      return res.status(400).json({ message: "Validation failed", errors: getZodIssues(error) });
     }
 
     return next(error);
@@ -152,7 +171,7 @@ export async function updateUserRole(req, res, next) {
     });
   } catch (error) {
     if (error.name === "ZodError") {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      return res.status(400).json({ message: "Validation failed", errors: getZodIssues(error) });
     }
 
     if (error.code === "P2025") {
@@ -202,15 +221,12 @@ export async function updateMyProfile(req, res, next) {
     });
   } catch (error) {
     if (error.name === "ZodError") {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      return res.status(400).json({ message: "Validation failed", errors: getZodIssues(error) });
     }
 
     if (error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta.target[0] : undefined;
-      return res.status(409).json({
-        message: "Email or username is already in use",
-        field: target === "email" || target === "username" ? target : undefined,
-      });
+      return res.status(409).json(getUniqueConstraintError(target));
     }
 
     if (error.code === "P2025") {
@@ -293,7 +309,7 @@ export async function changeMyPassword(req, res, next) {
     return res.json({ message: "Password updated" });
   } catch (error) {
     if (error.name === "ZodError") {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      return res.status(400).json({ message: "Validation failed", errors: getZodIssues(error) });
     }
 
     return next(error);

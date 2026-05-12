@@ -812,6 +812,18 @@ const MESSAGE_TRANSLATIONS = {
     en: "Enter a valid email.",
     ru: "Введите корректный e-mail.",
   },
+  "E-pasts jau tiek izmantots.": {
+    en: "Email is already in use.",
+    ru: "E-mail уже используется.",
+  },
+  "Lietotājvārds jau tiek izmantots.": {
+    en: "Username is already in use.",
+    ru: "Имя пользователя уже используется.",
+  },
+  "E-pasts vai lietotājvārds jau tiek izmantots.": {
+    en: "Email or username is already in use.",
+    ru: "E-mail или имя пользователя уже используется.",
+  },
   "Parolei jābūt vismaz 8 simboliem.": {
     en: "Password must be at least 8 characters.",
     ru: "Пароль должен быть не менее 8 символов.",
@@ -920,6 +932,12 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     const exact = MESSAGE_TRANSLATIONS[source]?.[language];
     if (exact) {
       return exact;
+    }
+
+    const messageParts = source.split(/(?<=\.)\s+/).filter(Boolean);
+    const translatedParts = messageParts.map((part) => MESSAGE_TRANSLATIONS[part]?.[language] || part);
+    if (translatedParts.some((part, index) => part !== messageParts[index])) {
+      return translatedParts.join(" ");
     }
 
     const heroesSyncedMatch = source.match(/^Varoņi sinhronizēti:\s*(\d+)\.$/);

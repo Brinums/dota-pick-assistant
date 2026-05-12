@@ -4,8 +4,10 @@ export function createAuthFeature({
   attachFieldClearHandlers,
   clearInvalidFields,
   DEFAULT_VIEW_ID,
+  formatBackendErrorMessage,
   markFieldInvalid,
   parseBackendField,
+  parseBackendFields,
   renderProfileViewState,
   runWithButtonLoading,
   scrollToProfileTabs,
@@ -22,6 +24,45 @@ export function createAuthFeature({
   t = null,
 }) {
   const translate = (key, fallback) => (typeof t === "function" ? t(key, fallback) : fallback);
+
+  function collectBackendFields(error, fieldMap = {}) {
+    const fields =
+      typeof parseBackendFields === "function"
+        ? parseBackendFields(error, fieldMap)
+        : [];
+    const fallbackField =
+      typeof parseBackendField === "function"
+        ? parseBackendField(error, fieldMap)
+        : error?.field;
+
+    if (fallbackField && !fields.includes(fallbackField)) {
+      fields.push(fallbackField);
+    }
+
+    return fields;
+  }
+
+  function markInvalidFields(form, fields) {
+    fields.forEach((field) => markFieldInvalid(form, field));
+  }
+
+  function collectErrorMessages(errors) {
+    return [...new Set(errors.map((error) => String(error?.message || "").trim()).filter(Boolean))].join(" ");
+  }
+
+  function handleValidationErrors(form, errors) {
+    markInvalidFields(
+      form,
+      errors.map((error) => error?.field).filter(Boolean),
+    );
+    setNotice(collectErrorMessages(errors));
+  }
+
+  function backendErrorMessage(error) {
+    return typeof formatBackendErrorMessage === "function"
+      ? formatBackendErrorMessage(error)
+      : error?.message;
+  }
 
   function resetPasswordVisibility(root = document) {
     root.querySelectorAll("button[data-toggle-password]").forEach((button) => {
@@ -193,27 +234,21 @@ export function createAuthFeature({
 
       await runWithButtonLoading(registerForm.querySelector("button[type='submit']"), "Reģistrē...", async () => {
         try {
-          const usernameError = validateUsername(username);
-          if (usernameError) {
-            throw usernameError;
-          }
-
-          const emailError = validateEmail(email);
-          if (emailError) {
-            throw emailError;
-          }
-
-          const passwordError = validatePassword(password, "password");
-          if (passwordError) {
-            throw passwordError;
-          }
+          const validationErrors = [
+            validateUsername(username),
+            validateEmail(email),
+            validatePassword(password, "password"),
+          ].filter(Boolean);
 
           if (!passwordConfirm) {
-            throw toValidationError("Ievadi paroles apstiprinājumu.", "passwordConfirm");
+            validationErrors.push(toValidationError("Ievadi paroles apstiprinājumu.", "passwordConfirm"));
+          } else if (password !== passwordConfirm) {
+            validationErrors.push(toValidationError("Paroles nesakrīt.", "passwordConfirm"));
           }
 
-          if (password !== passwordConfirm) {
-            throw toValidationError("Paroles nesakrīt.", "passwordConfirm");
+          if (validationErrors.length) {
+            handleValidationErrors(registerForm, validationErrors);
+            return;
           }
 
           const result = await apiRequest("/auth/register", {
@@ -226,17 +261,13 @@ export function createAuthFeature({
           activateView(DEFAULT_VIEW_ID);
           setNotice("Reģistrācija veiksmīga.", "success");
         } catch (error) {
-          const fieldName = parseBackendField(error, {
+          const fieldNames = collectBackendFields(error, {
             username: "username",
             email: "email",
             password: "password",
           });
-          if (fieldName) {
-            markFieldInvalid(registerForm, fieldName);
-          } else if (error?.field) {
-            markFieldInvalid(registerForm, error.field);
-          }
-          setNotice(error.message);
+          markInvalidFields(registerForm, fieldNames);
+          setNotice(backendErrorMessage(error));
         }
       });
     });
@@ -251,13 +282,15 @@ export function createAuthFeature({
 
       await runWithButtonLoading(loginForm.querySelector("button[type='submit']"), "Ienāk...", async () => {
         try {
-          const emailError = validateEmail(email);
-          if (emailError) {
-            throw emailError;
-          }
+          const validationErrors = [validateEmail(email)].filter(Boolean);
 
           if (!password) {
-            throw toValidationError("Ievadi paroli.", "password");
+            validationErrors.push(toValidationError("Ievadi paroli.", "password"));
+          }
+
+          if (validationErrors.length) {
+            handleValidationErrors(loginForm, validationErrors);
+            return;
           }
 
           const result = await apiRequest("/auth/login", {
@@ -270,13 +303,17 @@ export function createAuthFeature({
           activateView(DEFAULT_VIEW_ID);
           setNotice("Pieslēgšanās veiksmīga.", "success");
         } catch (error) {
-          if (error?.field) {
-            markFieldInvalid(loginForm, error.field);
+          const fieldNames = collectBackendFields(error, {
+            email: "email",
+            password: "password",
+          });
+          if (fieldNames.length) {
+            markInvalidFields(loginForm, fieldNames);
           } else {
             markFieldInvalid(loginForm, "email");
             markFieldInvalid(loginForm, "password");
           }
-          setNotice(error.message);
+          setNotice(backendErrorMessage(error));
         }
       });
     });
@@ -312,11 +349,8 @@ export function createAuthFeature({
             setProfilePage("overview");
             setNotice("Lietotājvārds atjaunināts.", "success");
           } catch (error) {
-            const fieldName = parseBackendField(error, { username: "username" }) || error?.field;
-            if (fieldName) {
-              markFieldInvalid(profileUsernameForm, fieldName);
-            }
-            setNotice(error.message);
+            markInvalidFields(profileUsernameForm, collectBackendFields(error, { username: "username" }));
+            setNotice(backendErrorMessage(error));
           }
         },
       );
@@ -350,11 +384,8 @@ export function createAuthFeature({
           setProfilePage("overview");
           setNotice("E-pasts atjaunināts.", "success");
         } catch (error) {
-          const fieldName = parseBackendField(error, { email: "email" }) || error?.field;
-          if (fieldName) {
-            markFieldInvalid(profileEmailForm, fieldName);
-          }
-          setNotice(error.message);
+          markInvalidFields(profileEmailForm, collectBackendFields(error, { email: "email" }));
+          setNotice(backendErrorMessage(error));
         }
       });
     });
@@ -378,21 +409,26 @@ export function createAuthFeature({
         "Atjaunina...",
         async () => {
           try {
+            const validationErrors = [];
+
             if (!currentPassword) {
-              throw toValidationError("Ievadi esošo paroli.", "currentPassword");
+              validationErrors.push(toValidationError("Ievadi esošo paroli.", "currentPassword"));
             }
 
             const passwordError = validatePassword(newPassword, "newPassword");
             if (passwordError) {
-              throw passwordError;
+              validationErrors.push(passwordError);
             }
 
             if (!newPasswordConfirm) {
-              throw toValidationError("Ievadi jaunās paroles apstiprinājumu.", "newPasswordConfirm");
+              validationErrors.push(toValidationError("Ievadi jaunās paroles apstiprinājumu.", "newPasswordConfirm"));
+            } else if (newPassword !== newPasswordConfirm) {
+              validationErrors.push(toValidationError("Jaunā parole un apstiprinājums nesakrīt.", "newPasswordConfirm"));
             }
 
-            if (newPassword !== newPasswordConfirm) {
-              throw toValidationError("Jaunā parole un apstiprinājums nesakrīt.", "newPasswordConfirm");
+            if (validationErrors.length) {
+              handleValidationErrors(changePasswordForm, validationErrors);
+              return;
             }
 
             await apiRequest("/users/me/password", {
@@ -405,15 +441,16 @@ export function createAuthFeature({
             setProfilePage("overview");
             setNotice("Parole veiksmīgi nomainīta.", "success");
           } catch (error) {
-            const fieldName =
-              parseBackendField(error, { currentPassword: "currentPassword", newPassword: "newPassword" }) ||
-              error?.field;
-            if (fieldName) {
-              markFieldInvalid(changePasswordForm, fieldName);
+            const fieldNames = collectBackendFields(error, {
+              currentPassword: "currentPassword",
+              newPassword: "newPassword",
+            });
+            if (fieldNames.length) {
+              markInvalidFields(changePasswordForm, fieldNames);
             } else if (String(error?.message || "").toLowerCase().includes("current password")) {
               markFieldInvalid(changePasswordForm, "currentPassword");
             }
-            setNotice(error.message);
+            setNotice(backendErrorMessage(error));
           }
         },
       );

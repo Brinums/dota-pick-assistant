@@ -30,6 +30,25 @@ const loginSchema = z.object({
   password: z.string().min(1).max(128),
 });
 
+function getZodIssues(error) {
+  return Array.isArray(error.issues) ? error.issues : error.errors || [];
+}
+
+function getUniqueConstraintError(target) {
+  const field = target === "email" || target === "username" ? target : undefined;
+  const messageByField = {
+    email: "E-pasts jau tiek izmantots.",
+    username: "Lietotājvārds jau tiek izmantots.",
+  };
+  const message = field ? messageByField[field] : "E-pasts vai lietotājvārds jau tiek izmantots.";
+
+  return {
+    message,
+    field,
+    errors: field ? [{ field, path: [field], message }] : [],
+  };
+}
+
 export async function register(req, res, next) {
   try {
     const { username, email, password } = registerSchema.parse(req.body);
@@ -73,15 +92,12 @@ export async function register(req, res, next) {
     });
   } catch (error) {
     if (error.name === "ZodError") {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      return res.status(400).json({ message: "Validation failed", errors: getZodIssues(error) });
     }
 
     if (error.code === "P2002") {
       const target = Array.isArray(error.meta?.target) ? error.meta.target[0] : undefined;
-      return res.status(409).json({
-        message: "Email or username is already in use",
-        field: target === "email" || target === "username" ? target : undefined,
-      });
+      return res.status(409).json(getUniqueConstraintError(target));
     }
 
     return next(error);
@@ -127,7 +143,7 @@ export async function login(req, res, next) {
     });
   } catch (error) {
     if (error.name === "ZodError") {
-      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      return res.status(400).json({ message: "Validation failed", errors: getZodIssues(error) });
     }
 
     return next(error);
