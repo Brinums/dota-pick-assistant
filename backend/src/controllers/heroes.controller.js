@@ -38,20 +38,10 @@ function buildHeroWhereClause(query) {
 
   if (query.search) {
     and.push({
-      OR: [
-        {
-          localizedName: {
-            contains: query.search,
-            mode: "insensitive",
-          },
-        },
-        {
-          name: {
-            contains: query.search,
-            mode: "insensitive",
-          },
-        },
-      ],
+      localizedName: {
+        contains: query.search,
+        mode: "insensitive",
+      },
     });
   }
 

@@ -30,6 +30,17 @@ export function createHeroesFeature({
     return "-";
   }
 
+  function formatHeroPrimaryAttr(primaryAttr) {
+    const normalizedAttr = String(primaryAttr || "").trim().toLowerCase();
+    const fallback = formatPrimaryAttr(primaryAttr, { short: false });
+
+    if (!normalizedAttr) {
+      return fallback;
+    }
+
+    return typeof t === "function" ? t(`attr.${normalizedAttr}`, fallback) : fallback;
+  }
+
   function formatHeroRole(role) {
     const normalizedRole = String(role || "").trim().toLowerCase();
     if (!normalizedRole) {
@@ -204,7 +215,7 @@ export function createHeroesFeature({
           <div>
             <strong>${hero.localizedName}</strong>
           <div class="picker-meta">
-            ${formatPrimaryAttr(hero.primaryAttr)} · ${attackType}
+            ${formatHeroPrimaryAttr(hero.primaryAttr)} · ${attackType}
           </div>
             <div class="role-badges">${renderRoleBadges(hero.roles)}</div>
           </div>
@@ -312,7 +323,7 @@ export function createHeroesFeature({
             <strong>${hero.localizedName}</strong>
           </div>
         </td>
-        <td>${formatPrimaryAttr(hero.primaryAttr)}</td>
+        <td>${formatHeroPrimaryAttr(hero.primaryAttr)}</td>
         <td>${attackType}</td>
         <td><strong>${Number(hero.rawWinRate || 0).toFixed(2)}%</strong></td>
         <td><div class="role-badges">${renderRoleBadges(hero.roles)}</div></td>
@@ -330,7 +341,7 @@ export function createHeroesFeature({
             ${imageUrl ? `<img src="${imageUrl}" alt="${hero.localizedName}" class="hero-avatar" loading="lazy" />` : ""}
             <h4>${hero.localizedName}</h4>
           </div>
-          <div class="hero-quick-meta">${formatPrimaryAttr(hero.primaryAttr)} · ${formatAttackType(hero.attackType)}</div>
+          <div class="hero-quick-meta">${formatHeroPrimaryAttr(hero.primaryAttr)} · ${formatAttackType(hero.attackType)}</div>
           <div class="hero-quick-meta">${
             typeof t === "function" ? t("heroes.winrateLabel", "Winrate") : "Winrate"
           }: <strong>${Number(hero.rawWinRate || 0).toFixed(2)}%</strong></div>

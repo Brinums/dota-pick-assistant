@@ -90,6 +90,10 @@ const TEXTS = {
     "heroes.table.roles": "Lomas",
     "attack.melee": "Tuvcīņa",
     "attack.ranged": "Tālcīņa",
+    "attr.str": "Spēks",
+    "attr.agi": "Veiklība",
+    "attr.int": "Intelekts",
+    "attr.all": "Universāls",
     "common.all": "Visi",
     "common.allF": "Visas",
     "common.add": "Pievienot",
@@ -334,6 +338,10 @@ const TEXTS = {
     "heroes.table.roles": "Roles",
     "attack.melee": "Melee",
     "attack.ranged": "Ranged",
+    "attr.str": "Strength",
+    "attr.agi": "Agility",
+    "attr.int": "Intelligence",
+    "attr.all": "Universal",
     "common.all": "All",
     "common.allF": "All",
     "common.add": "Add",
@@ -578,6 +586,10 @@ const TEXTS = {
     "heroes.table.roles": "Роли",
     "attack.melee": "Ближняя",
     "attack.ranged": "Дальняя",
+    "attr.str": "Сила",
+    "attr.agi": "Ловкость",
+    "attr.int": "Интеллект",
+    "attr.all": "Универсал",
     "common.all": "Все",
     "common.allF": "Все",
     "common.add": "Добавить",
@@ -1116,6 +1128,10 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     if (heroesHead[4]) heroesHead[4].textContent = t("heroes.table.roles");
 
     setOptionText("#heroesFilterForm select[name='primaryAttr']", "", "common.all");
+    setOptionText("#heroesFilterForm select[name='primaryAttr']", "str", "attr.str");
+    setOptionText("#heroesFilterForm select[name='primaryAttr']", "agi", "attr.agi");
+    setOptionText("#heroesFilterForm select[name='primaryAttr']", "int", "attr.int");
+    setOptionText("#heroesFilterForm select[name='primaryAttr']", "all", "attr.all");
     setOptionText("#heroesFilterForm select[name='attackType']", "", "common.all");
     setOptionText("#heroesFilterForm select[name='attackType']", "Melee", "attack.melee");
     setOptionText("#heroesFilterForm select[name='attackType']", "Ranged", "attack.ranged");
@@ -1175,6 +1191,10 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     setText("#statsFilterForm div:nth-child(2) label", "heroes.attr");
     setText("#statsFilterForm div:nth-child(3) label", "heroes.attack");
     setOptionText("#statsFilterForm select[name='primaryAttr']", "", "common.all");
+    setOptionText("#statsFilterForm select[name='primaryAttr']", "str", "attr.str");
+    setOptionText("#statsFilterForm select[name='primaryAttr']", "agi", "attr.agi");
+    setOptionText("#statsFilterForm select[name='primaryAttr']", "int", "attr.int");
+    setOptionText("#statsFilterForm select[name='primaryAttr']", "all", "attr.all");
     setOptionText("#statsFilterForm select[name='attackType']", "", "common.all");
     setOptionText("#statsFilterForm select[name='attackType']", "Melee", "attack.melee");
     setOptionText("#statsFilterForm select[name='attackType']", "Ranged", "attack.ranged");
@@ -1261,6 +1281,10 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     setText("#heroPickerModal .modal-filters div:nth-child(4) label", "heroes.role");
 
     setOptionText("#pickerAttrSelect", "", "common.all");
+    setOptionText("#pickerAttrSelect", "str", "attr.str");
+    setOptionText("#pickerAttrSelect", "agi", "attr.agi");
+    setOptionText("#pickerAttrSelect", "int", "attr.int");
+    setOptionText("#pickerAttrSelect", "all", "attr.all");
     setOptionText("#pickerAttackSelect", "", "common.all");
     setOptionText("#pickerAttackSelect", "Melee", "attack.melee");
     setOptionText("#pickerAttackSelect", "Ranged", "attack.ranged");
