@@ -1,4 +1,4 @@
-const SUPPORTED_LANGUAGES = ["lv", "en", "ru"];
+const SUPPORTED_LANGUAGES = ["lv", "en"];
 
 const TEXTS = {
   lv: {
@@ -17,7 +17,6 @@ const TEXTS = {
     "lang.label": "Valoda",
     "lang.lv": "Latviešu",
     "lang.en": "English",
-    "lang.ru": "Русский",
 
     "home.bannerTag": "Adaptive Draft Engine",
     "home.title": "Gudrāki piki pirms katras spēles",
@@ -173,10 +172,10 @@ const TEXTS = {
     "stats.searchPlaceholder": "piem. Puck",
     "stats.filterSummary": "Filtri nav piemēroti.",
     "stats.heroStats": "Varoņu statistika",
-    "stats.sortWinrate": "Winrate ↓",
-    "stats.sortPickrate": "Pickrate",
-    "stats.sortWinrateBase": "Winrate",
-    "stats.sortPickrateBase": "Pickrate",
+    "stats.sortWinrate": "Uzvaru likme ↓",
+    "stats.sortPickrate": "Izvēles likme",
+    "stats.sortWinrateBase": "Uzvaru likme",
+    "stats.sortPickrateBase": "Izvēles likme",
     "stats.summary.heroes": "Varoņu skaits",
     "stats.summary.avgWinrate": "Vidējais winrate",
     "stats.summary.avgPickrate": "Vidējais pickrate",
@@ -186,8 +185,8 @@ const TEXTS = {
     "stats.loadFailed": "Neizdevās ielādēt statistiku.",
     "stats.openSection": "Atver sadaļu, lai ielādētu statistiku.",
     "stats.table.hero": "Varonis",
-    "stats.table.winrate": "Winrate",
-    "stats.table.pickrate": "Pickrate",
+    "stats.table.winrate": "Uzvaru likme",
+    "stats.table.pickrate": "Izvēles likme",
 
     "profile.title": "Mans profils",
     "profile.help": "Pārvaldi konta informāciju un nomaini paroli.",
@@ -218,6 +217,13 @@ const TEXTS = {
     "admin.loadUsers": "Ielādēt lietotājus",
     "admin.usersLoaded": "Lietotāji ielādēti.",
     "admin.noUsers": "Nav lietotāju.",
+    "admin.recommendations": "Ieteikumi (lietotāji)",
+    "admin.loadRecommendations": "Ielādēt ieteikumus",
+    "admin.recommendationsLoaded": "Ieteikumi ielādēti.",
+    "admin.noRecommendations": "Nav ieteikumu.",
+    "admin.table.user": "Lietotājs",
+    "admin.table.hero": "Varonis",
+    "admin.table.date": "Datums",
     "admin.roleUpdated": "Loma atjaunota.",
     "admin.cannotRemoveOwnAdmin": "Savu ADMIN lomu noņemt nedrīkst.",
     "admin.cannotDeleteOwnUser": "Pašreizējo administratoru šeit dzēst nedrīkst.",
@@ -265,7 +271,6 @@ const TEXTS = {
     "lang.label": "Language",
     "lang.lv": "Latvian",
     "lang.en": "English",
-    "lang.ru": "Russian",
 
     "home.bannerTag": "Adaptive Draft Engine",
     "home.title": "Smarter picks before every match",
@@ -466,6 +471,13 @@ const TEXTS = {
     "admin.loadUsers": "Load users",
     "admin.usersLoaded": "Users loaded.",
     "admin.noUsers": "No users.",
+    "admin.recommendations": "Recommendations (users)",
+    "admin.loadRecommendations": "Load recommendations",
+    "admin.recommendationsLoaded": "Recommendations loaded.",
+    "admin.noRecommendations": "No recommendations.",
+    "admin.table.user": "User",
+    "admin.table.hero": "Hero",
+    "admin.table.date": "Date",
     "admin.roleUpdated": "Role updated.",
     "admin.cannotRemoveOwnAdmin": "You cannot remove your own ADMIN role.",
     "admin.cannotDeleteOwnUser": "You cannot delete the current administrator here.",
@@ -497,400 +509,119 @@ const TEXTS = {
     "picker.search": "Search by name",
     "picker.searchPlaceholder": "e.g. Juggernaut",
   },
-  ru: {
-    "subtitle": "Драфт-аналитика и рекомендации в одном месте",
-    "nav.home": "Главная",
-    "nav.heroes": "Герои",
-    "nav.recommend": "Рекомендации",
-    "nav.stats": "Статистика",
-    "nav.loginRegister": "Войти / Регистрация",
-    "nav.profile": "Аккаунт",
-    "nav.admin": "Админка",
-    "auth.guest": "Гость",
-    "auth.logout": "Выйти",
-    "role.user": "Пользователь",
-    "role.admin": "Админ",
-    "lang.label": "Язык",
-    "lang.lv": "Латышский",
-    "lang.en": "Английский",
-    "lang.ru": "Русский",
-
-    "home.bannerTag": "Adaptive Draft Engine",
-    "home.title": "Более умные пики перед каждым матчем",
-    "home.help": "Собирай драфт, анализируй статистику героев и получай рекомендации по counter/synergy на основе OpenDota и локальной базы.",
-    "home.openRecommendations": "Открыть рекомендации",
-    "home.viewHeroes": "Смотреть героев",
-    "home.focusTitle": "Фокус системы",
-    "home.focus1": "Баланс CounterWR + SynergyWR",
-    "home.focus2": "Фильтрация по ролям под драфт",
-    "home.focus3": "Автоматическая фильтрация и сортировка статистики",
-    "home.feature1.title": "Аналитика героев",
-    "home.feature1.help": "Фильтруй по атрибуту, типу атаки, роли и винрейту.",
-    "home.feature2.title": "Рекомендации драфта",
-    "home.feature2.help": "Собери драфт команды и получи топ-кандидатов по score.",
-    "home.feature3.title": "Мета-статистика",
-    "home.feature3.help": "Смотри тренды pickrate и winrate в одной таблице.",
-    "home.feature4.title": "Админ-управление",
-    "home.feature4.help": "Синхронизируй героев, про-матчи и данные рекомендаций из OpenDota.",
-
-    "login.title": "Вход",
-    "login.help": "Войди, чтобы использовать рекомендации и аккаунт.",
-    "auth.email": "E-mail",
-    "auth.password": "Пароль",
-    "auth.showPassword": "Показать пароль",
-    "auth.hidePassword": "Скрыть пароль",
-    "login.submit": "Войти",
-    "login.switch": "Нет аккаунта? Создать",
-
-    "register.title": "Регистрация",
-    "register.help": "Создай аккаунт и затем войди в систему.",
-    "register.username": "Имя пользователя",
-    "register.passwordConfirm": "Подтвердите пароль",
-    "register.rulesTitle": "Пароль должен содержать:",
-    "register.rule1": "8+ символов",
-    "register.rule2": "1 заглавную букву",
-    "register.rule3": "1 строчную букву",
-    "register.rule4": "1 цифру",
-    "register.rule5": "1 спецсимвол",
-    "register.submit": "Зарегистрироваться",
-    "register.switch": "Уже есть аккаунт? Перейти ко входу",
-
-    "heroes.title": "Каталог героев",
-    "heroes.help": "Ищи, фильтруй и сортируй героев как на классических Dota-стат сайтах.",
-    "heroes.search": "Поиск",
-    "heroes.searchPlaceholder": "напр. Shadow Fiend",
-    "heroes.attr": "Атрибут",
-    "heroes.attack": "Атака",
-    "heroes.role": "Роль",
-    "heroes.sortBy": "Сортировать по",
-    "heroes.order": "Порядок",
-    "heroes.refresh": "Обновить список",
-    "heroes.quick": "Быстрый обзор",
-    "heroes.quickHelp": "Первые герои из отфильтрованного списка.",
-    "heroes.emptySelection": "Нет выбранных героев.",
-    "heroes.noResults": "Герои не найдены.",
-    "heroes.noAvailableForFilters": "Нет героев для выбранных фильтров.",
-    "heroes.winrateLabel": "Winrate",
-    "heroes.heroAdded": "Герой добавлен.",
-    "heroes.refreshed": "Список героев обновлён.",
-    "heroes.error.alreadyAlly": "Герой уже в списке союзников.",
-    "heroes.error.maxAllies": "В списке союзников может быть максимум 5 героев.",
-    "heroes.error.alreadyEnemy": "Этот герой уже в списке противников.",
-    "heroes.error.enemyAlreadySelected": "Герой уже в списке противников.",
-    "heroes.error.maxEnemies": "В списке противников может быть максимум 5 героев.",
-    "heroes.error.alreadyAllyFromEnemy": "Этот герой уже в списке союзников.",
-    "heroes.table.hero": "Герой",
-    "heroes.table.attr": "Атрибут",
-    "heroes.table.attack": "Атака",
-    "heroes.table.winrate": "Винрейт %",
-    "heroes.table.roles": "Роли",
-    "attack.melee": "Ближняя",
-    "attack.ranged": "Дальняя",
-    "attr.str": "Сила",
-    "attr.agi": "Ловкость",
-    "attr.int": "Интеллект",
-    "attr.all": "Универсал",
-    "common.all": "Все",
-    "common.allF": "Все",
-    "common.add": "Добавить",
-    "common.remove": "Удалить",
-    "common.unavailable": "Недоступно",
-    "common.noData": "Нет данных.",
-    "common.asc": "По возрастанию",
-    "common.desc": "По убыванию",
-    "heroes.sort.name": "Название",
-    "heroes.sort.winrate": "Винрейт",
-    "heroes.sort.propick": "Про-пики",
-    "heroes.sort.date": "Дата",
-
-    "recommend.title": "Система рекомендаций",
-    "recommend.help": "Собери драфт, сравни команды и получи лучший следующий пик.",
-    "recommend.allies": "Союзники",
-    "recommend.enemies": "Противники",
-    "recommend.selectedHeroes": "Выбрано героев:",
-    "recommend.chooseHero": "Выбрать героя",
-    "common.clear": "Очистить",
-    "recommend.desiredRole": "Желаемая роль",
-    "recommend.roleAny": "Любая",
-    "heroRole.carry": "Керри",
-    "heroRole.support": "Поддержка",
-    "heroRole.nuker": "Нюкер",
-    "heroRole.disabler": "Контроль",
-    "heroRole.initiator": "Инициатор",
-    "heroRole.durable": "Выживаемость",
-    "heroRole.escape": "Побег",
-    "heroRole.pusher": "Пушер",
-    "recommend.topN": "Топ N",
-    "recommend.minMatchup": "Мин. matchup игр",
-    "recommend.minSynergy": "Мин. synergy игр",
-    "recommend.extraRefresh": "Дополнительно загрузить свежие матчи из OpenDota",
-    "recommend.extraMatchCount": "Количество доп. матчей",
-    "recommend.extraHelp": "Если галочка выключена, рекомендации строятся только из локальной базы.",
-    "recommend.extraLimit": "Ограничение: можно загрузить от 1 до 10 доп. матчей за один запрос рекомендаций.",
-    "recommend.generate": "Сгенерировать рекомендации",
-    "recommend.newTitle": "Новые рекомендации",
-    "recommend.newHelp": "Топ-варианты по score, confidence и синергии драфта.",
-    "recommend.myTitle": "Мои рекомендации",
-    "recommend.noResults": "Нет результатов. Выберите героев и сгенерируйте рекомендации.",
-    "recommend.bestPick": "Лучший пик для этого драфта",
-    "recommend.alternative": "Альтернатива",
-    "recommend.confidence": "Уверенность",
-    "recommend.confidence.low": "Низкая",
-    "recommend.empty": "Нет рекомендаций.",
-    "recommend.deleted": "Рекомендация удалена.",
-    "recommend.loaded": "Рекомендации загружены.",
-    "recommend.timeout": "Расчёт рекомендаций занимает больше времени. Попробуйте снова через несколько секунд.",
-    "recommend.validation.minOnePerTeam": "В обеих командах должен быть выбран минимум 1 герой.",
-    "recommend.validation.maxFivePerTeam": "В каждой команде можно выбрать максимум 5 героев.",
-    "recommend.validation.noOverlap": "Один и тот же герой не может быть в обеих командах.",
-    "recommend.success.created": "Рекомендации созданы.",
-    "recommend.success.localOnly": "Рекомендации созданы только из локальной базы данных.",
-    "recommend.success.quota": "Рекомендации созданы из локальной базы (лимит OpenDota достигнут).",
-    "recommend.success.noNewMatches": "Рекомендации созданы (новые матчи не найдены, использована локальная база).",
-    "recommend.success.loadedExtraMatches": "Рекомендации созданы. Дополнительно загружено матчей: {count}.",
-    "recommend.success.refreshed": "Рекомендации созданы с дополнительным обновлением данных.",
-    "common.load": "Загрузить",
-    "common.loading": "Загрузка...",
-    "common.calculating": "Расчёт...",
-    "common.games": "игр",
-    "common.delete": "Удалить",
-    "common.deleting": "Удаление...",
-    "auth.loginRequired": "Сначала войдите в систему.",
-    "recommend.table.id": "ID",
-    "recommend.table.hero": "Герой",
-    "recommend.table.score": "Score",
-    "recommend.table.reason": "Обоснование",
-    "recommend.table.action": "Действие",
-
-    "stats.title": "Статистика",
-    "stats.help": "Обзор меты с фильтрацией по свойствам героя и данным pick/win.",
-    "stats.filters": "Фильтры",
-    "stats.searchHero": "Поиск героя",
-    "stats.searchPlaceholder": "напр. Puck",
-    "stats.filterSummary": "Фильтры не применены.",
-    "stats.heroStats": "Статистика героев",
-    "stats.sortWinrate": "Winrate ↓",
-    "stats.sortPickrate": "Pickrate",
-    "stats.sortWinrateBase": "Winrate",
-    "stats.sortPickrateBase": "Pickrate",
-    "stats.summary.heroes": "Количество героев",
-    "stats.summary.avgWinrate": "Средний winrate",
-    "stats.summary.avgPickrate": "Средний pickrate",
-    "stats.summary.topHero": "Топ герой",
-    "stats.foundSummary": "Найдено героев: {count} из {total}",
-    "stats.loading": "Загрузка статистики...",
-    "stats.loadFailed": "Не удалось загрузить статистику.",
-    "stats.openSection": "Открой раздел, чтобы загрузить статистику.",
-    "stats.table.hero": "Герой",
-    "stats.table.winrate": "Winrate",
-    "stats.table.pickrate": "Pickrate",
-
-    "profile.title": "Мой профиль",
-    "profile.help": "Управляй данными аккаунта и меняй пароль.",
-    "profile.noSession": "Нет активной сессии.",
-    "profile.username": "Имя пользователя",
-    "profile.passwordMasked": "••••••••",
-    "common.change": "Изменить",
-    "profile.editUsername": "Изменить имя пользователя",
-    "profile.editEmail": "Изменить e-mail",
-    "profile.editPassword": "Изменить пароль",
-    "common.back": "Назад",
-    "profile.newUsernameHelp": "Введи новое имя пользователя и сохрани изменения.",
-    "profile.newEmailHelp": "Введи новый e-mail и сохрани изменения.",
-    "profile.changePasswordHelp": "Введи текущий и новый пароль, затем подтверди изменения.",
-    "profile.currentPassword": "Текущий пароль",
-    "profile.newPassword": "Новый пароль",
-    "profile.newPasswordConfirm": "Подтвердите новый пароль",
-    "profile.updatePassword": "Обновить пароль",
-
-    "admin.title": "Администрирование",
-    "admin.help": "Доступно только пользователю ADMIN.",
-    "admin.sync": "Синхронизация",
-    "admin.syncHeroes": "Синхронизировать героев из OpenDota",
-    "admin.syncing": "Синхронизация...",
-    "admin.heroesSyncedCount": "Герои синхронизированы: {count}.",
-    "admin.syncTakesLong": "Синхронизация занимает больше времени. Подождите и попробуйте снова.",
-    "admin.users": "Пользователи",
-    "admin.loadUsers": "Загрузить пользователей",
-    "admin.usersLoaded": "Пользователи загружены.",
-    "admin.noUsers": "Нет пользователей.",
-    "admin.roleUpdated": "Роль обновлена.",
-    "admin.cannotRemoveOwnAdmin": "Нельзя снять роль ADMIN у текущего администратора.",
-    "admin.cannotDeleteOwnUser": "Нельзя удалить текущего администратора здесь.",
-    "admin.protectedAdmin": "Главный администратор защищён.",
-    "admin.confirmDeleteUser": "Удалить пользователя {user}?",
-    "admin.userDeleted": "Пользователь удалён.",
-    "admin.logs": "Журнал запросов внешнего API",
-    "admin.loadLogs": "Загрузить логи",
-    "admin.logsLoaded": "Логи загружены.",
-    "admin.noLogs": "Нет логов.",
-    "admin.table.username": "Имя пользователя",
-    "admin.table.email": "E-mail",
-    "admin.table.role": "Роль",
-    "admin.table.action": "Действие",
-    "admin.table.time": "Время",
-    "admin.table.provider": "Provider",
-    "admin.table.endpoint": "Endpoint",
-    "admin.table.status": "Status",
-    "admin.table.ms": "мс",
-    "admin.table.success": "Успех",
-    "common.save": "Сохранить",
-    "common.yes": "Да",
-    "common.no": "Нет",
-
-    "picker.title": "Выбрать героя",
-    "picker.ally": "Выбрать героя союзников",
-    "picker.enemy": "Выбрать героя противников",
-    "picker.close": "Закрыть",
-    "picker.search": "Поиск по названию",
-    "picker.searchPlaceholder": "напр. Juggernaut",
-  },
 };
 
 const MESSAGE_TRANSLATIONS = {
   "Reģistrācija veiksmīga.": {
     en: "Registration successful.",
-    ru: "Регистрация успешна.",
   },
   "Pieslēgšanās veiksmīga.": {
     en: "Login successful.",
-    ru: "Вход выполнен успешно.",
   },
   "Varoņu saraksts atjaunots.": {
     en: "Hero list refreshed.",
-    ru: "Список героев обновлён.",
   },
   "Vispirms jāpieslēdzas sistēmai.": {
     en: "Please log in first.",
-    ru: "Сначала войдите в систему.",
   },
   "Lai izmantotu ieteikumus, vispirms jāpieslēdzas sistēmai.": {
     en: "To use recommendations, please sign in first.",
-    ru: "Чтобы использовать рекомендации, сначала войдите в систему.",
   },
   "Ieteikumi ielādēti.": {
     en: "Recommendations loaded.",
-    ru: "Рекомендации загружены.",
   },
   "Ieteikums dzēsts.": {
     en: "Recommendation deleted.",
-    ru: "Рекомендация удалена.",
   },
   "Ieteikumu aprēķins aizņem ilgāku laiku. Mēģini vēlreiz pēc dažām sekundēm.": {
     en: "Recommendation calculation takes longer. Try again in a few seconds.",
-    ru: "Расчёт рекомендаций занимает больше времени. Попробуйте снова через несколько секунд.",
   },
   "Loma atjaunota.": {
     en: "Role updated.",
-    ru: "Роль обновлена.",
   },
   "Lietotāji ielādēti.": {
     en: "Users loaded.",
-    ru: "Пользователи загружены.",
+  },
+  "Ieteikumi ielādēti.": {
+    en: "Recommendations loaded.",
   },
   "Logi ielādēti.": {
     en: "Logs loaded.",
-    ru: "Логи загружены.",
   },
   "Sinhronizācija aizņem ilgāku laiku. Pagaidi un mēģini vēlreiz.": {
     en: "Synchronization takes longer. Please wait and try again.",
-    ru: "Синхронизация занимает больше времени. Подождите и попробуйте снова.",
   },
   "Backend atbild pārāk ilgi. Pārbaudi vai serveris darbojas un mēģini vēlreiz.": {
     en: "Backend response timeout. Check if server is running and try again.",
-    ru: "Сервер отвечает слишком долго. Проверьте, работает ли сервер, и попробуйте снова.",
   },
   "Neizdevās pieslēgties backend API. Pārbaudi vai serveris darbojas un CORS ir pareizs.": {
     en: "Failed to connect to backend API. Check server and CORS configuration.",
-    ru: "Не удалось подключиться к backend API. Проверьте сервер и настройки CORS.",
   },
   "Ievadi lietotājvārdu.": {
     en: "Enter username.",
-    ru: "Введите имя пользователя.",
   },
   "Lietotājvārdam jābūt 3 līdz 30 simbolu garam.": {
     en: "Username must be 3 to 30 characters long.",
-    ru: "Имя пользователя должно быть длиной от 3 до 30 символов.",
   },
   "Lietotājvārds drīkst saturēt tikai burtus, ciparus, _, . un -.": {
     en: "Username can contain only letters, digits, _, . and -.",
-    ru: "Имя пользователя может содержать только буквы, цифры, _, . и -.",
   },
   "Ievadi e-pastu.": {
     en: "Enter email.",
-    ru: "Введите e-mail.",
   },
   "Ievadi korektu e-pastu.": {
     en: "Enter a valid email.",
-    ru: "Введите корректный e-mail.",
   },
   "E-pasts jau tiek izmantots.": {
     en: "Email is already in use.",
-    ru: "E-mail уже используется.",
   },
   "Lietotājvārds jau tiek izmantots.": {
     en: "Username is already in use.",
-    ru: "Имя пользователя уже используется.",
   },
   "E-pasts vai lietotājvārds jau tiek izmantots.": {
     en: "Email or username is already in use.",
-    ru: "E-mail или имя пользователя уже используется.",
   },
   "Parolei jābūt vismaz 8 simboliem.": {
     en: "Password must be at least 8 characters.",
-    ru: "Пароль должен быть не менее 8 символов.",
   },
   "Parolē jābūt vismaz vienam lielajam burtam.": {
     en: "Password must contain at least one uppercase letter.",
-    ru: "Пароль должен содержать минимум одну заглавную букву.",
   },
   "Parolē jābūt vismaz vienam mazajam burtam.": {
     en: "Password must contain at least one lowercase letter.",
-    ru: "Пароль должен содержать минимум одну строчную букву.",
   },
   "Parolē jābūt vismaz vienam ciparam.": {
     en: "Password must contain at least one digit.",
-    ru: "Пароль должен содержать минимум одну цифру.",
   },
   "Parolē jābūt vismaz vienam speciālajam simbolam.": {
     en: "Password must contain at least one special character.",
-    ru: "Пароль должен содержать минимум один спецсимвол.",
   },
   "Ievadi paroles apstiprinājumu.": {
     en: "Enter password confirmation.",
-    ru: "Введите подтверждение пароля.",
   },
   "Paroles nesakrīt.": {
     en: "Passwords do not match.",
-    ru: "Пароли не совпадают.",
   },
   "Ievadi paroli.": {
     en: "Enter password.",
-    ru: "Введите пароль.",
   },
   "Lietotājvārds atjaunināts.": {
     en: "Username updated.",
-    ru: "Имя пользователя обновлено.",
   },
   "E-pasts atjaunināts.": {
     en: "Email updated.",
-    ru: "E-mail обновлён.",
   },
   "Ievadi esošo paroli.": {
     en: "Enter current password.",
-    ru: "Введите текущий пароль.",
   },
   "Ievadi jaunās paroles apstiprinājumu.": {
     en: "Enter new password confirmation.",
-    ru: "Введите подтверждение нового пароля.",
   },
   "Jaunā parole un apstiprinājums nesakrīt.": {
     en: "New password and confirmation do not match.",
-    ru: "Новый пароль и подтверждение не совпадают.",
   },
   "Parole veiksmīgi nomainīta.": {
     en: "Password changed successfully.",
-    ru: "Пароль успешно изменён.",
   },
 };
 
@@ -957,18 +688,12 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
       if (language === "en") {
         return `Heroes synchronized: ${heroesSyncedMatch[1]}.`;
       }
-      if (language === "ru") {
-        return `Герои синхронизированы: ${heroesSyncedMatch[1]}.`;
-      }
     }
 
     const extraMatchesLoadedMatch = source.match(/^Ieteikumi izveidoti\. Papildus ielādēti\s*(\d+)\s*mači\.$/);
     if (extraMatchesLoadedMatch) {
       if (language === "en") {
         return `Recommendations generated. Additionally loaded ${extraMatchesLoadedMatch[1]} matches.`;
-      }
-      if (language === "ru") {
-        return `Рекомендации созданы. Дополнительно загружено матчей: ${extraMatchesLoadedMatch[1]}.`;
       }
     }
 
@@ -1044,7 +769,6 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     const languageCodeMap = {
       lv: "LV",
       en: "EU",
-      ru: "RU",
     };
     const langCurrentLabel = document.querySelector("#langCurrentLabel");
     if (langCurrentLabel) {
@@ -1052,7 +776,6 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     }
     setText('#langMenu .lang-option[data-lang="lv"] .lang-option-name', "lang.lv");
     setText('#langMenu .lang-option[data-lang="en"] .lang-option-name', "lang.en");
-    setText('#langMenu .lang-option[data-lang="ru"] .lang-option-name', "lang.ru");
 
     setText("#homeView .banner-tag", "home.bannerTag");
     setText("#homeView .hero-banner-main h2", "home.title");
@@ -1243,6 +966,7 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     setText("#adminView > .section-header .section-help", "admin.help");
     setText("#syncHeroesBtn", "admin.syncHeroes");
     setText("#loadUsersBtn", "admin.loadUsers");
+    setText("#loadAdminRecommendationsBtn", "admin.loadRecommendations");
     setText("#loadLogsBtn", "admin.loadLogs");
     const adminSyncTitle = document.querySelector("#syncHeroesBtn")?.closest(".card")?.querySelector("h3");
     if (adminSyncTitle) {
@@ -1255,6 +979,13 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     const adminLogsTitle = document.querySelector("#loadLogsBtn")?.closest(".card")?.querySelector("h3");
     if (adminLogsTitle) {
       adminLogsTitle.textContent = t("admin.logs");
+    }
+    const adminRecommendationsTitle = document
+      .querySelector("#loadAdminRecommendationsBtn")
+      ?.closest(".card")
+      ?.querySelector("h3");
+    if (adminRecommendationsTitle) {
+      adminRecommendationsTitle.textContent = t("admin.recommendations");
     }
 
     const usersHead = document.querySelectorAll("#usersTable thead th");
@@ -1271,6 +1002,13 @@ export function createI18nFeature({ state, LANGUAGE_KEY, DEFAULT_LANGUAGE }) {
     if (logsHead[3]) logsHead[3].textContent = t("admin.table.status");
     if (logsHead[4]) logsHead[4].textContent = t("admin.table.ms");
     if (logsHead[5]) logsHead[5].textContent = t("admin.table.success");
+
+    const adminRecommendationsHead = document.querySelectorAll("#adminRecommendationsTable thead th");
+    if (adminRecommendationsHead[0]) adminRecommendationsHead[0].textContent = t("recommend.table.id");
+    if (adminRecommendationsHead[1]) adminRecommendationsHead[1].textContent = t("admin.table.user");
+    if (adminRecommendationsHead[2]) adminRecommendationsHead[2].textContent = t("admin.table.hero");
+    if (adminRecommendationsHead[3]) adminRecommendationsHead[3].textContent = t("recommend.table.score");
+    if (adminRecommendationsHead[4]) adminRecommendationsHead[4].textContent = t("admin.table.date");
 
     setText("#pickerTitle", "picker.title");
     setText("#closeHeroPickerBtn", "picker.close");

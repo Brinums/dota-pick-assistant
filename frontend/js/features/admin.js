@@ -134,7 +134,6 @@ export function createAdminFeature({
     const localeMap = {
       lv: "lv-LV",
       en: "en-US",
-      ru: "ru-RU",
     };
 
     rows.forEach((log) => {
@@ -151,9 +150,49 @@ export function createAdminFeature({
     });
   }
 
+  async function loadAdminRecommendations({ showNotice = false } = {}) {
+    const result = await apiRequest("/recommendations/all?limit=100", { auth: true });
+    renderAdminRecommendations(result.data || []);
+    if (showNotice) {
+      setNotice(translate("admin.recommendationsLoaded", "Ieteikumi ielādēti."), "success");
+    }
+  }
+
+  function renderAdminRecommendations(rows) {
+    const tbody = document.querySelector("#adminRecommendationsTable tbody");
+    tbody.innerHTML = "";
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5">${translate("admin.noRecommendations", "Nav ieteikumu.")}</td></tr>`;
+      return;
+    }
+
+    const locale = typeof getLanguage === "function" ? getLanguage() : "lv";
+    const localeMap = { lv: "lv-LV", en: "en-US" };
+
+    rows.forEach((item) => {
+      const tr = document.createElement("tr");
+      const userLabel = item.user?.username || item.user?.email || "-";
+      const heroLabel = item.suggestedHero?.localizedName || item.suggestedHero?.name || "-";
+      const scoreLabel = Number.isFinite(Number(item.score)) ? Number(item.score).toFixed(2) : "-";
+      const dateLabel = item.createdAt
+        ? new Date(item.createdAt).toLocaleString(localeMap[locale] || "lv-LV")
+        : "-";
+      tr.innerHTML = `
+        <td>${item.id}</td>
+        <td>${userLabel}</td>
+        <td>${heroLabel}</td>
+        <td>${scoreLabel}</td>
+        <td>${dateLabel}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
   function wireAdmin() {
     const syncHeroesBtn = document.querySelector("#syncHeroesBtn");
     const loadUsersBtn = document.querySelector("#loadUsersBtn");
+    const loadAdminRecommendationsBtn = document.querySelector("#loadAdminRecommendationsBtn");
     const loadLogsBtn = document.querySelector("#loadLogsBtn");
 
     syncHeroesBtn.addEventListener("click", async () => {
@@ -206,6 +245,20 @@ export function createAdminFeature({
           setNotice(error.message);
         }
       });
+    });
+
+    loadAdminRecommendationsBtn.addEventListener("click", async () => {
+      await runWithButtonLoading(
+        loadAdminRecommendationsBtn,
+        translate("common.loading", "Ielādē..."),
+        async () => {
+          try {
+            await loadAdminRecommendations({ showNotice: true });
+          } catch (error) {
+            setNotice(error.message);
+          }
+        },
+      );
     });
   }
 
