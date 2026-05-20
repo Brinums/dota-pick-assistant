@@ -11,6 +11,7 @@ export function createAdminFeature({
 }) {
   const translate = (key, fallback) => (typeof t === "function" ? t(key, fallback) : fallback);
   const PROTECTED_ADMIN_ID = 1;
+  let recommendationSyncPollTimer = null;
 
   async function loadUsersList({ showNotice = false } = {}) {
     const result = await apiRequest("/users?limit=100", { auth: true });
@@ -192,12 +193,65 @@ export function createAdminFeature({
   function wireAdmin() {
     const syncHeroesBtn = document.querySelector("#syncHeroesBtn");
     const syncRecommendationDataBtn = document.querySelector("#syncRecommendationDataBtn");
+    const cancelRecommendationSyncBtn = document.querySelector("#cancelRecommendationSyncBtn");
+    const recommendationSyncStatusEl = document.querySelector("#recommendationSyncStatus");
     const adminSyncMatchLimitInput = document.querySelector("#adminSyncMatchLimit");
     const adminSyncMinMatchupGamesInput = document.querySelector("#adminSyncMinMatchupGames");
     const adminSyncMinSynergyGamesInput = document.querySelector("#adminSyncMinSynergyGames");
     const loadUsersBtn = document.querySelector("#loadUsersBtn");
     const loadAdminRecommendationsBtn = document.querySelector("#loadAdminRecommendationsBtn");
     const loadLogsBtn = document.querySelector("#loadLogsBtn");
+
+    const clearRecommendationSyncPoll = () => {
+      if (recommendationSyncPollTimer) {
+        clearInterval(recommendationSyncPollTimer);
+        recommendationSyncPollTimer = null;
+      }
+    };
+
+    const renderRecommendationSyncStatus = (syncState) => {
+      if (!recommendationSyncStatusEl) {
+        return;
+      }
+
+      const status = String(syncState?.status || "idle");
+      const step = String(syncState?.currentStep || "-");
+      const progress = Number(syncState?.progress || 0);
+      const cancelRequested = Boolean(syncState?.cancelRequested);
+      const error = syncState?.error ? ` | error: ${syncState.error}` : "";
+      const cancelLabel = cancelRequested ? " | cancel requested" : "";
+      recommendationSyncStatusEl.textContent = `Status: ${status} | step: ${step} | ${progress}%${cancelLabel}${error}`;
+
+      if (cancelRecommendationSyncBtn) {
+        cancelRecommendationSyncBtn.disabled = status !== "running";
+      }
+    };
+
+    const fetchRecommendationSyncStatus = async ({ silent = true } = {}) => {
+      try {
+        const result = await apiRequest("/recommendations/sync/status", { auth: true });
+        const syncState = result?.data || {};
+        renderRecommendationSyncStatus(syncState);
+
+        if (syncState.status !== "running") {
+          clearRecommendationSyncPoll();
+        }
+
+        return syncState;
+      } catch (error) {
+        if (!silent) {
+          setNotice(error.message);
+        }
+        throw error;
+      }
+    };
+
+    const ensureRecommendationSyncPoll = () => {
+      clearRecommendationSyncPoll();
+      recommendationSyncPollTimer = setInterval(() => {
+        fetchRecommendationSyncStatus({ silent: true }).catch(() => {});
+      }, 2500);
+    };
 
     syncHeroesBtn.addEventListener("click", async () => {
       await runWithButtonLoading(syncHeroesBtn, translate("admin.syncing", "Sinhronizē..."), async () => {
@@ -247,39 +301,46 @@ export function createAdminFeature({
           };
 
           try {
-            const result = await apiRequest("/recommendations/sync", {
+            const result = await apiRequest("/recommendations/sync/start", {
               method: "POST",
               auth: true,
               body: payload,
-              timeoutMs: HERO_SYNC_REQUEST_TIMEOUT_MS,
             });
             state.statsLoaded = false;
-            const syncedMatches = Number(result?.data?.matches?.synced || 0);
-            const rebuiltSynergy = Number(result?.data?.synergies?.created || 0);
+            renderRecommendationSyncStatus(result?.data || {});
+            ensureRecommendationSyncPoll();
             setNotice(
-              translate(
-                "admin.recommendationDataSynced",
-                "Ieteikumu dati atjaunoti: mači {matches}, synergy pāri {synergy}.",
-              )
-                .replace("{matches}", String(syncedMatches))
-                .replace("{synergy}", String(rebuiltSynergy)),
+              translate("admin.recommendationSyncStarted", "Ieteikumu datu atjaunošana sākta fonā."),
               "success",
             );
           } catch (error) {
-            if (String(error.message || "").includes("Backend atbild pārāk ilgi")) {
-              setNotice(
-                translate(
-                  "admin.syncTakesLong",
-                  "Sinhronizācija aizņem ilgāku laiku. Pagaidi un mēģini vēlreiz.",
-                ),
-              );
-            } else {
-              setNotice(error.message);
-            }
+            setNotice(error.message);
           }
         },
       );
     });
+
+    cancelRecommendationSyncBtn?.addEventListener("click", async () => {
+      await runWithButtonLoading(
+        cancelRecommendationSyncBtn,
+        translate("common.loading", "Ielādē..."),
+        async () => {
+          try {
+            const result = await apiRequest("/recommendations/sync/cancel", {
+              method: "POST",
+              auth: true,
+              body: {},
+            });
+            renderRecommendationSyncStatus(result?.data || {});
+            setNotice(translate("admin.recommendationSyncCancelRequested", "Atcelšana pieprasīta."), "success");
+          } catch (error) {
+            setNotice(error.message);
+          }
+        },
+      );
+    });
+
+    fetchRecommendationSyncStatus({ silent: true }).catch(() => {});
 
     loadUsersBtn.addEventListener("click", async () => {
       await runWithButtonLoading(loadUsersBtn, translate("common.loading", "Ielādē..."), async () => {

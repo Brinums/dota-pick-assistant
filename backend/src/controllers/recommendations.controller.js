@@ -98,6 +98,119 @@ const recommendationSyncSchema = z.object({
   minSynergyGamesTogether: z.number().int().min(1).max(2000).default(1),
 });
 
+const recommendationSyncCancelSchema = z
+  .object({
+    force: z.boolean().optional().default(false),
+  })
+  .optional()
+  .default({});
+
+const recommendationSyncJobState = {
+  status: "idle", // idle | running | completed | failed | cancelled
+  cancelRequested: false,
+  startedAt: null,
+  finishedAt: null,
+  progress: 0,
+  currentStep: null,
+  payload: null,
+  result: null,
+  error: null,
+};
+
+function getRecommendationSyncStatusResponse() {
+  return {
+    status: recommendationSyncJobState.status,
+    cancelRequested: recommendationSyncJobState.cancelRequested,
+    startedAt: recommendationSyncJobState.startedAt,
+    finishedAt: recommendationSyncJobState.finishedAt,
+    progress: recommendationSyncJobState.progress,
+    currentStep: recommendationSyncJobState.currentStep,
+    payload: recommendationSyncJobState.payload,
+    result: recommendationSyncJobState.result,
+    error: recommendationSyncJobState.error,
+  };
+}
+
+function resetRecommendationSyncJobState() {
+  recommendationSyncJobState.status = "idle";
+  recommendationSyncJobState.cancelRequested = false;
+  recommendationSyncJobState.startedAt = null;
+  recommendationSyncJobState.finishedAt = null;
+  recommendationSyncJobState.progress = 0;
+  recommendationSyncJobState.currentStep = null;
+  recommendationSyncJobState.payload = null;
+  recommendationSyncJobState.result = null;
+  recommendationSyncJobState.error = null;
+}
+
+function markRecommendationSyncCancelled() {
+  recommendationSyncJobState.status = "cancelled";
+  recommendationSyncJobState.finishedAt = new Date().toISOString();
+  recommendationSyncJobState.currentStep = "cancelled";
+}
+
+async function runRecommendationSyncJob(payload) {
+  recommendationSyncJobState.status = "running";
+  recommendationSyncJobState.cancelRequested = false;
+  recommendationSyncJobState.startedAt = new Date().toISOString();
+  recommendationSyncJobState.finishedAt = null;
+  recommendationSyncJobState.progress = 0;
+  recommendationSyncJobState.currentStep = "matchups";
+  recommendationSyncJobState.payload = payload;
+  recommendationSyncJobState.result = null;
+  recommendationSyncJobState.error = null;
+
+  try {
+    if (recommendationSyncJobState.cancelRequested) {
+      markRecommendationSyncCancelled();
+      return;
+    }
+
+    const matchups = await syncHeroMatchupsMatrix({
+      minGamesPlayed: payload.minMatchupGamesPlayed,
+    });
+    recommendationSyncJobState.progress = 34;
+    recommendationSyncJobState.currentStep = "matches";
+
+    if (recommendationSyncJobState.cancelRequested) {
+      recommendationSyncJobState.result = { matchups };
+      markRecommendationSyncCancelled();
+      return;
+    }
+
+    const matches = await syncRecentMatchesWithDraftData({
+      limit: payload.matchLimit,
+    });
+    recommendationSyncJobState.progress = 67;
+    recommendationSyncJobState.currentStep = "synergies";
+
+    if (recommendationSyncJobState.cancelRequested) {
+      recommendationSyncJobState.result = { matchups, matches };
+      markRecommendationSyncCancelled();
+      return;
+    }
+
+    const synergies = await rebuildHeroSynergiesFromStoredMatches({
+      minGamesTogether: payload.minSynergyGamesTogether,
+    });
+
+    recommendationSyncJobState.status = "completed";
+    recommendationSyncJobState.progress = 100;
+    recommendationSyncJobState.currentStep = "done";
+    recommendationSyncJobState.finishedAt = new Date().toISOString();
+    recommendationSyncJobState.result = {
+      matchups,
+      matches,
+      synergies,
+    };
+  } catch (error) {
+    recommendationSyncJobState.status = "failed";
+    recommendationSyncJobState.finishedAt = new Date().toISOString();
+    recommendationSyncJobState.currentStep = "failed";
+    recommendationSyncJobState.error = error?.message || "Unknown sync error";
+  }
+}
+
 function buildRecommendationWhere(query, scope = "own", userContext = null) {
   const and = [];
 
@@ -343,6 +456,73 @@ export async function syncRecommendationData(req, res, next) {
         matches,
         synergies,
       },
+    });
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+    }
+
+    return next(error);
+  }
+}
+
+export async function startRecommendationSyncJob(req, res, next) {
+  try {
+    const payload = recommendationSyncSchema.parse(req.body ?? {});
+
+    if (recommendationSyncJobState.status === "running") {
+      return res.status(409).json({
+        message: "Recommendation sync is already running",
+        data: getRecommendationSyncStatusResponse(),
+      });
+    }
+
+    if (
+      recommendationSyncJobState.status === "completed" ||
+      recommendationSyncJobState.status === "failed" ||
+      recommendationSyncJobState.status === "cancelled"
+    ) {
+      resetRecommendationSyncJobState();
+    }
+
+    runRecommendationSyncJob(payload);
+
+    return res.status(202).json({
+      message: "Recommendation sync started",
+      data: getRecommendationSyncStatusResponse(),
+    });
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ message: "Validation failed", errors: error.errors });
+    }
+
+    return next(error);
+  }
+}
+
+export async function getRecommendationSyncJobStatus(_req, res) {
+  return res.json({
+    data: getRecommendationSyncStatusResponse(),
+  });
+}
+
+export async function cancelRecommendationSyncJob(req, res, next) {
+  try {
+    const payload = recommendationSyncCancelSchema.parse(req.body ?? {});
+
+    if (recommendationSyncJobState.status !== "running") {
+      return res.status(409).json({
+        message: "Recommendation sync is not running",
+        data: getRecommendationSyncStatusResponse(),
+      });
+    }
+
+    recommendationSyncJobState.cancelRequested = true;
+    recommendationSyncJobState.currentStep = payload.force ? "force-cancel-requested" : "cancel-requested";
+
+    return res.json({
+      message: "Cancellation requested",
+      data: getRecommendationSyncStatusResponse(),
     });
   } catch (error) {
     if (error.name === "ZodError") {

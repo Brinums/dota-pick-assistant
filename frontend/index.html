@@ -686,7 +686,11 @@
               </div>
             </div>
             <p class="section-help">Šī darbība ielādē mačus, atjauno matchup un pārbūvē synergy datus datubāzē.</p>
-            <button id="syncRecommendationDataBtn" type="button" class="inline-action-btn">Atjaunot ieteikumu datus</button>
+            <div class="table-actions">
+              <button id="syncRecommendationDataBtn" type="button" class="inline-action-btn">Sākt atjaunošanu</button>
+              <button id="cancelRecommendationSyncBtn" type="button" class="secondary">Atcelt</button>
+            </div>
+            <p id="recommendationSyncStatus" class="section-help">Status: idle</p>
           </div>
 
           <div class="card table-card">
