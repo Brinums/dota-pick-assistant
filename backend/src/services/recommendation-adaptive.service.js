@@ -775,37 +775,84 @@ export async function buildAdaptiveRecommendations({
 
   const topLimit = Math.max(1, Math.min(Number(topN) || DEFAULT_TOP_N, 10));
   const candidateIds = candidates.map((hero) => hero.id);
+  let counterRowsRaw = [];
+  let synergyRowsRaw = [];
+  let usedFallbackThresholds = false;
 
-  const [counterRowsRaw, synergyRowsRaw] = await Promise.all([
-    candidateIds.length
-      ? prisma.heroMatchup.findMany({
-          where: {
-            heroId: { in: candidateIds },
-            vsHeroId: { in: enemyHeroIds },
-            gamesPlayed: { gte: minMatchupGames },
-          },
-          select: {
-            heroId: true,
-            wins: true,
-            gamesPlayed: true,
-          },
-        })
-      : [],
-    candidateIds.length
-      ? prisma.heroSynergy.findMany({
-          where: {
-            heroId: { in: candidateIds },
-            withHeroId: { in: allyHeroIds },
-            gamesTogether: { gte: minSynergyGames },
-          },
-          select: {
-            heroId: true,
-            winsTogether: true,
-            gamesTogether: true,
-          },
-        })
-      : [],
-  ]);
+  if (candidateIds.length) {
+    const [counterStrictRows, synergyStrictRows] = await Promise.all([
+      prisma.heroMatchup.findMany({
+        where: {
+          heroId: { in: candidateIds },
+          vsHeroId: { in: enemyHeroIds },
+          gamesPlayed: { gte: minMatchupGames },
+        },
+        select: {
+          heroId: true,
+          wins: true,
+          gamesPlayed: true,
+        },
+      }),
+      prisma.heroSynergy.findMany({
+        where: {
+          heroId: { in: candidateIds },
+          withHeroId: { in: allyHeroIds },
+          gamesTogether: { gte: minSynergyGames },
+        },
+        select: {
+          heroId: true,
+          winsTogether: true,
+          gamesTogether: true,
+        },
+      }),
+    ]);
+
+    const needCounterFallback = counterStrictRows.length === 0 && minMatchupGames > 1;
+    const needSynergyFallback = synergyStrictRows.length === 0 && minSynergyGames > 1;
+
+    if (needCounterFallback || needSynergyFallback) {
+      usedFallbackThresholds = true;
+    }
+
+    if (needCounterFallback || needSynergyFallback) {
+      const [counterFallbackRows, synergyFallbackRows] = await Promise.all([
+        needCounterFallback
+          ? prisma.heroMatchup.findMany({
+              where: {
+                heroId: { in: candidateIds },
+                vsHeroId: { in: enemyHeroIds },
+                gamesPlayed: { gte: 1 },
+              },
+              select: {
+                heroId: true,
+                wins: true,
+                gamesPlayed: true,
+              },
+            })
+          : [],
+        needSynergyFallback
+          ? prisma.heroSynergy.findMany({
+              where: {
+                heroId: { in: candidateIds },
+                withHeroId: { in: allyHeroIds },
+                gamesTogether: { gte: 1 },
+              },
+              select: {
+                heroId: true,
+                winsTogether: true,
+                gamesTogether: true,
+              },
+            })
+          : [],
+      ]);
+
+      counterRowsRaw = needCounterFallback ? counterFallbackRows : counterStrictRows;
+      synergyRowsRaw = needSynergyFallback ? synergyFallbackRows : synergyStrictRows;
+    } else {
+      counterRowsRaw = counterStrictRows;
+      synergyRowsRaw = synergyStrictRows;
+    }
+  }
 
   const countersByHeroId = aggregateByHeroId(counterRowsRaw, {
     heroIdField: "heroId",
@@ -923,6 +970,7 @@ export async function buildAdaptiveRecommendations({
       requestedTopN: topLimit,
       candidatesConsidered: candidates.length,
       roleFilterApplied: desiredRole || null,
+      usedFallbackThresholds,
       note:
         "Counter-winrate uses OpenDota hero matchups. Synergy-winrate uses locally aggregated match pair data. Confidence is based on games coverage and metric agreement.",
     },
