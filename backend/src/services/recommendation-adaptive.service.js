@@ -287,6 +287,100 @@ export async function syncHeroMatchupsMatrix({ minGamesPlayed = 1 } = {}) {
   };
 }
 
+export async function syncHeroMatchupsForEnemyHeroes({
+  enemyHeroIds = [],
+  minGamesPlayed = 1,
+} = {}) {
+  const enemyIds = toPositiveIntSet(enemyHeroIds);
+  const normalizedMinGames = Math.max(1, Number(minGamesPlayed) || 1);
+
+  if (!enemyIds.length) {
+    return {
+      enemiesProcessed: 0,
+      rowsUpserted: 0,
+      quotaExceeded: false,
+      haltedReason: null,
+    };
+  }
+
+  let enemiesProcessed = 0;
+  let rowsUpserted = 0;
+  let quotaExceeded = false;
+  let haltedReason = null;
+
+  for (const enemyHeroId of enemyIds) {
+    let rows = [];
+    try {
+      rows = await fetchHeroMatchups(enemyHeroId);
+    } catch (error) {
+      if (isOpenDotaQuotaError(error)) {
+        quotaExceeded = true;
+        haltedReason = error.message;
+        break;
+      }
+      continue;
+    }
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      continue;
+    }
+
+    const upserts = rows
+      .map((row) => {
+        const candidateHeroId = Number(row.hero_id);
+        const enemyWins = Number(row.wins || 0);
+        const gamesPlayed = Number(row.games_played || 0);
+
+        if (!Number.isInteger(candidateHeroId) || candidateHeroId <= 0) {
+          return null;
+        }
+
+        if (!Number.isFinite(gamesPlayed) || gamesPlayed < normalizedMinGames) {
+          return null;
+        }
+
+        const candidateWins = Math.max(0, gamesPlayed - enemyWins);
+        const winRate = gamesPlayed > 0 ? (candidateWins / gamesPlayed) * 100 : 50;
+        rowsUpserted += 1;
+
+        return prisma.heroMatchup.upsert({
+          where: {
+            heroId_vsHeroId: {
+              heroId: candidateHeroId,
+              vsHeroId: enemyHeroId,
+            },
+          },
+          create: {
+            heroId: candidateHeroId,
+            vsHeroId: enemyHeroId,
+            wins: candidateWins,
+            gamesPlayed,
+            winRate: Number(winRate.toFixed(4)),
+          },
+          update: {
+            wins: candidateWins,
+            gamesPlayed,
+            winRate: Number(winRate.toFixed(4)),
+          },
+        });
+      })
+      .filter(Boolean);
+
+    if (upserts.length > 0) {
+      await prisma.$transaction(upserts);
+    }
+
+    enemiesProcessed += 1;
+  }
+
+  return {
+    enemiesProcessed,
+    rowsUpserted,
+    quotaExceeded,
+    haltedReason,
+  };
+}
+
 export async function syncRecentMatchesWithDraftData({ limit = 40 } = {}) {
   const normalizedLimit = Math.max(1, Math.min(Number(limit) || 40, 120));
   let recentMatches = [];
@@ -506,11 +600,29 @@ export async function refreshAdaptiveRecommendationLiveData({
   matchLimit = 20,
   minSynergyGamesTogether = 1,
   focusHeroIds = [],
+  enemyHeroIds = [],
+  minMatchupGamesPlayed = 1,
 } = {}) {
   const normalizedLimit = Math.max(1, Math.min(Number(matchLimit) || 20, 20));
 
   try {
     const focusHeroes = toPositiveIntSet(focusHeroIds);
+    const matchupRefresh = await syncHeroMatchupsForEnemyHeroes({
+      enemyHeroIds,
+      minGamesPlayed: minMatchupGamesPlayed,
+    });
+
+    if (matchupRefresh.quotaExceeded) {
+      return {
+        attempted: true,
+        refreshed: false,
+        source: "database",
+        reason: "quota_exceeded",
+        details: matchupRefresh.haltedReason || "Quota limit reached",
+        matchups: matchupRefresh,
+      };
+    }
+
     const matches =
       focusHeroes.length > 0
         ? await syncMatchesForFocusHeroes({
@@ -527,6 +639,7 @@ export async function refreshAdaptiveRecommendationLiveData({
         reason: "quota_exceeded",
         details: matches.haltedReason || "Quota limit reached",
         matches,
+        matchups: matchupRefresh,
       };
     }
 
@@ -550,6 +663,7 @@ export async function refreshAdaptiveRecommendationLiveData({
       source: "live_plus_database",
       reason: "ok",
       matches,
+      matchups: matchupRefresh,
       synergies,
       strategy: focusHeroes.length > 0 ? "focused_by_selected_heroes" : "latest_pro_matches",
     };
@@ -559,9 +673,9 @@ export async function refreshAdaptiveRecommendationLiveData({
         attempted: true,
         refreshed: false,
         source: "database",
-        reason: "quota_exceeded",
-        details: error.message,
-      };
+      reason: "quota_exceeded",
+      details: error.message,
+    };
     }
 
     return {

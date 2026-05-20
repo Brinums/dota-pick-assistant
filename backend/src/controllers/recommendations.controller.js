@@ -277,6 +277,8 @@ export async function createRecommendationsAdaptive(req, res, next) {
           matchLimit: payload.recentMatchesLimit,
           minSynergyGamesTogether: payload.minSynergyGames,
           focusHeroIds: [...payload.currentTeam, ...payload.enemyTeam],
+          enemyHeroIds: payload.enemyTeam,
+          minMatchupGamesPlayed: payload.minMatchupGames,
         })
       : {
           attempted: false,

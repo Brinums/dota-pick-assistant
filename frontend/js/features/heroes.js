@@ -127,6 +127,18 @@ export function createHeroesFeature({
     state.pickerTarget = null;
   }
 
+  function resetHeroPickerFilters() {
+    const searchInput = document.querySelector("#pickerSearchInput");
+    const attrSelect = document.querySelector("#pickerAttrSelect");
+    const attackSelect = document.querySelector("#pickerAttackSelect");
+    const roleSelect = document.querySelector("#pickerRoleSelect");
+
+    if (searchInput) searchInput.value = "";
+    if (attrSelect) attrSelect.value = "";
+    if (attackSelect) attackSelect.value = "";
+    if (roleSelect) roleSelect.value = "";
+  }
+
   function getFilteredHeroesForPicker() {
     const searchValue = String(document.querySelector("#pickerSearchInput")?.value || "")
       .trim()
@@ -261,6 +273,7 @@ export function createHeroesFeature({
           typeof t === "function" ? t("heroes.heroAdded", "Varonis pievienots.") : "Varonis pievienots.",
           "success",
         );
+        resetHeroPickerFilters();
         closeHeroPicker();
       });
     });

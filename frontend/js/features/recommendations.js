@@ -189,6 +189,7 @@ export function createRecommendationsFeature({
     const pickerAttackSelect = document.querySelector("#pickerAttackSelect");
     const pickerRoleSelect = document.querySelector("#pickerRoleSelect");
     const pickerModal = document.querySelector("#heroPickerModal");
+    let pickerBackdropPressed = false;
 
     chooseAllyBtn?.addEventListener("click", () => openHeroPicker("ally"));
     chooseEnemyBtn?.addEventListener("click", () => openHeroPicker("enemy"));
@@ -204,10 +205,17 @@ export function createRecommendationsFeature({
     });
 
     closePickerBtn?.addEventListener("click", closeHeroPicker);
+    pickerModal?.addEventListener("mousedown", (event) => {
+      pickerBackdropPressed = event.target === pickerModal;
+    });
     pickerModal?.addEventListener("click", (event) => {
-      if (event.target === pickerModal) {
+      if (event.target === pickerModal && pickerBackdropPressed) {
         closeHeroPicker();
       }
+      pickerBackdropPressed = false;
+    });
+    pickerModal?.addEventListener("mouseup", () => {
+      pickerBackdropPressed = false;
     });
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
