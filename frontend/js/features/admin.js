@@ -191,6 +191,10 @@ export function createAdminFeature({
 
   function wireAdmin() {
     const syncHeroesBtn = document.querySelector("#syncHeroesBtn");
+    const syncRecommendationDataBtn = document.querySelector("#syncRecommendationDataBtn");
+    const adminSyncMatchLimitInput = document.querySelector("#adminSyncMatchLimit");
+    const adminSyncMinMatchupGamesInput = document.querySelector("#adminSyncMinMatchupGames");
+    const adminSyncMinSynergyGamesInput = document.querySelector("#adminSyncMinSynergyGames");
     const loadUsersBtn = document.querySelector("#loadUsersBtn");
     const loadAdminRecommendationsBtn = document.querySelector("#loadAdminRecommendationsBtn");
     const loadLogsBtn = document.querySelector("#loadLogsBtn");
@@ -223,6 +227,58 @@ export function createAdminFeature({
           }
         }
       });
+    });
+
+    syncRecommendationDataBtn?.addEventListener("click", async () => {
+      await runWithButtonLoading(
+        syncRecommendationDataBtn,
+        translate("admin.syncing", "Sinhronizē..."),
+        async () => {
+          const payload = {
+            matchLimit: Math.max(1, Math.min(120, Number(adminSyncMatchLimitInput?.value) || 40)),
+            minMatchupGamesPlayed: Math.max(
+              1,
+              Math.min(2000, Number(adminSyncMinMatchupGamesInput?.value) || 1),
+            ),
+            minSynergyGamesTogether: Math.max(
+              1,
+              Math.min(2000, Number(adminSyncMinSynergyGamesInput?.value) || 1),
+            ),
+          };
+
+          try {
+            const result = await apiRequest("/recommendations/sync", {
+              method: "POST",
+              auth: true,
+              body: payload,
+              timeoutMs: HERO_SYNC_REQUEST_TIMEOUT_MS,
+            });
+            state.statsLoaded = false;
+            const syncedMatches = Number(result?.data?.matches?.synced || 0);
+            const rebuiltSynergy = Number(result?.data?.synergies?.created || 0);
+            setNotice(
+              translate(
+                "admin.recommendationDataSynced",
+                "Ieteikumu dati atjaunoti: mači {matches}, synergy pāri {synergy}.",
+              )
+                .replace("{matches}", String(syncedMatches))
+                .replace("{synergy}", String(rebuiltSynergy)),
+              "success",
+            );
+          } catch (error) {
+            if (String(error.message || "").includes("Backend atbild pārāk ilgi")) {
+              setNotice(
+                translate(
+                  "admin.syncTakesLong",
+                  "Sinhronizācija aizņem ilgāku laiku. Pagaidi un mēģini vēlreiz.",
+                ),
+              );
+            } else {
+              setNotice(error.message);
+            }
+          }
+        },
+      );
     });
 
     loadUsersBtn.addEventListener("click", async () => {

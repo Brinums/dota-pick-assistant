@@ -248,7 +248,8 @@ export function createHeroesFeature({
     });
 
     list.querySelectorAll("button[data-add-hero-id]").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
         const heroId = Number(button.dataset.addHeroId);
         const targetSide = state.pickerTarget;
         if (!targetSide) {

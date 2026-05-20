@@ -272,7 +272,9 @@ export async function createRecommendationsAdaptive(req, res, next) {
       });
     }
 
-    const liveRefresh = payload.autoRefreshRecentMatches
+    const allowLiveRefresh = payload.autoRefreshRecentMatches && req.user?.role === "ADMIN";
+
+    const liveRefresh = allowLiveRefresh
       ? await refreshAdaptiveRecommendationLiveData({
           matchLimit: payload.recentMatchesLimit,
           minSynergyGamesTogether: payload.minSynergyGames,
@@ -284,7 +286,10 @@ export async function createRecommendationsAdaptive(req, res, next) {
           attempted: false,
           refreshed: false,
           source: "database",
-          reason: "disabled_by_request",
+          reason:
+            payload.autoRefreshRecentMatches && req.user?.role !== "ADMIN"
+              ? "disabled_for_non_admin"
+              : "disabled_by_request",
         };
 
     const result = await buildAdaptiveRecommendations({

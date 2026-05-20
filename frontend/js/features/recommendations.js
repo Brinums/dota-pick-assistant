@@ -311,6 +311,11 @@ export function createRecommendationsFeature({
 
           if (refreshMeta?.reason === "disabled_by_request") {
             successMessage = translate("recommend.success.localOnly", "Ieteikumi izveidoti tikai no lokālās datubāzes.");
+          } else if (refreshMeta?.reason === "disabled_for_non_admin") {
+            successMessage = translate(
+              "recommend.success.localOnlyNonAdmin",
+              "Ieteikumi izveidoti no lokālās datubāzes. Papildu maču ielāde pieejama tikai administrēšanā.",
+            );
           } else if (refreshMeta?.reason === "quota_exceeded") {
             successMessage = translate(
               "recommend.success.quota",

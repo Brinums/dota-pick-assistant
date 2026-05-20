@@ -90,6 +90,7 @@ function syncAccessUi() {
   const isAuthenticated = Boolean(state.user);
   const isAdmin = state.user?.role === "ADMIN";
   const logoutBtn = document.querySelector("#logoutBtn");
+  const refreshOptions = document.querySelector("#recommendForm .recommend-refresh-options");
 
   document.querySelectorAll(".auth-only").forEach((el) => {
     el.classList.toggle("auth-visible", isAuthenticated);
@@ -105,6 +106,10 @@ function syncAccessUi() {
 
   if (logoutBtn) {
     logoutBtn.hidden = !isAuthenticated;
+  }
+
+  if (refreshOptions) {
+    refreshOptions.hidden = !isAdmin;
   }
 }
 
