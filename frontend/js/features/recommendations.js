@@ -51,7 +51,7 @@ export function createRecommendationsFeature({
               <strong>${heroTitle}</strong>
               <div class="section-help">${
                 index === 0
-                  ? translate("recommend.bestPick", "Labākais picks šim draftam")
+                  ? translate("recommend.bestPick", "Labākā izvēle šim sastāvam")
                   : `${translate("recommend.alternative", "Alternatīva")} #${index + 1}`
               }</div>
             </div>
