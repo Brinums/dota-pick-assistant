@@ -218,9 +218,34 @@ export function createAdminFeature({
       const step = String(syncState?.currentStep || "-");
       const progress = Number(syncState?.progress || 0);
       const cancelRequested = Boolean(syncState?.cancelRequested);
-      const error = syncState?.error ? ` | error: ${syncState.error}` : "";
-      const cancelLabel = cancelRequested ? " | cancel requested" : "";
-      recommendationSyncStatusEl.textContent = `Status: ${status} | step: ${step} | ${progress}%${cancelLabel}${error}`;
+      const statusLabels = {
+        idle: translate("admin.syncStatus.idle", "Gaida palaišanu"),
+        running: cancelRequested
+          ? translate("admin.syncStatus.cancelRequested", "Atcelšana pieprasīta")
+          : translate("admin.syncStatus.running", "Notiek atjaunošana"),
+        completed: translate("admin.syncStatus.completed", "Pabeigts"),
+        failed: translate("admin.syncStatus.failed", "Kļūda"),
+        cancelled: translate("admin.syncStatus.cancelled", "Atcelts"),
+      };
+      const stepLabels = {
+        matchups: translate("admin.syncStep.matchups", "matchup datu atjaunošana"),
+        matches: translate("admin.syncStep.matches", "maču ielāde"),
+        synergies: translate("admin.syncStep.synergies", "sinerģijas pārrēķins"),
+        done: translate("admin.syncStep.done", "pabeigts"),
+        failed: translate("admin.syncStep.failed", "kļūda"),
+        cancelled: translate("admin.syncStep.cancelled", "atcelts"),
+        "cancel-requested": translate("admin.syncStep.cancelRequested", "gaida drošu apturēšanu"),
+        "force-cancel-requested": translate("admin.syncStep.cancelRequested", "gaida drošu apturēšanu"),
+      };
+      const statusLabel = statusLabels[status] || status;
+      const stepLabel = stepLabels[step] || step;
+      const errorLabel = syncState?.error
+        ? ` | ${translate("admin.syncStatus.errorDetails", "Kļūdas ziņojums")}: ${syncState.error}`
+        : "";
+      recommendationSyncStatusEl.textContent = `${translate(
+        "admin.syncStatus.label",
+        "Statuss",
+      )}: ${statusLabel} | ${translate("admin.syncStatus.step", "Solis")}: ${stepLabel} | ${progress}%${errorLabel}`;
 
       if (cancelRecommendationSyncBtn) {
         cancelRecommendationSyncBtn.disabled = status !== "running";
